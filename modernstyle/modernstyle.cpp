@@ -37,6 +37,8 @@ QHash<QString, QColor> themeColors(bool dark, const QColor &accent)
         c["textDisabled"] = QColor("#6e6e6e");
         c["menu"] = QColor("#2c2c2c");
         c["tooltip"] = QColor("#2c2c2c");
+        c["tab"] = QColor("#2b2b2b");             // unselected tabs, scroll bar tracks
+        c["tabHover"] = QColor("#363636");
     } else {
         c["window"] = QColor("#f3f3f3");
         c["surface"] = QColor("#ffffff");
@@ -51,6 +53,8 @@ QHash<QString, QColor> themeColors(bool dark, const QColor &accent)
         c["textDisabled"] = QColor("#a3a3a3");
         c["menu"] = QColor("#ffffff");
         c["tooltip"] = QColor("#ffffff");
+        c["tab"] = QColor("#e7e7e7");
+        c["tabHover"] = QColor("#dedede");
     }
     // The accent, a little lighter on dark backgrounds so it stands out
     c["accent"] = dark ? accent.lighter(115) : accent;
