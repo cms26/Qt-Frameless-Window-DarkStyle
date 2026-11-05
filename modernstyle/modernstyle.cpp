@@ -46,6 +46,8 @@ QHash<QString, QColor> themeColors(bool dark, const QColor &accent)
         c["tooltip"] = QColor("#32383e");         // $popover-bg
         c["tab"] = QColor("#1c1e22");             // scroll bar tracks: $progress-bg, darken($gray-900, 5%)
         c["tabHover"] = QColor("#3e444c");
+        c["panel"] = QColor("#32383e");           // dock widgets: $card-bg, lighten($body-bg, 5%)
+        c["panelHeader"] = QColor("#515960");     // their title bar: $card-cap-bg, lighten($gray-800, 10%)
     } else {
         c["window"] = QColor("#f3f3f3");
         c["surface"] = QColor("#ffffff");
@@ -62,6 +64,8 @@ QHash<QString, QColor> themeColors(bool dark, const QColor &accent)
         c["tooltip"] = QColor("#ffffff");
         c["tab"] = QColor("#e7e7e7");
         c["tabHover"] = QColor("#dedede");
+        c["panel"] = QColor("#ffffff");
+        c["panelHeader"] = QColor("#e8e8e8");
     }
     // The accent, a little lighter on dark backgrounds so it stands out
     c["accent"] = dark ? accent.lighter(115) : accent;
@@ -173,6 +177,29 @@ Painter chevron(const QColor &color, bool up)
         const double y1 = up ? 6.5 : 3.5, y2 = up ? 3.5 : 6.5;
         const QPointF points[] = { { 2.0, y1 }, { 5.0, y2 }, { 8.0, y1 } };
         p.drawPolyline(points, 3);
+    };
+}
+
+// 12 x 12 dock widget title bar buttons: a cross (close), or two
+// overlapping squares (float / dock again), like the window's title bar
+Painter dockClose(const QColor &color)
+{
+    return [=](QPainter &p) {
+        QPen pen(color, 1.5);
+        pen.setCapStyle(Qt::RoundCap);
+        p.setPen(pen);
+        p.drawLine(QPointF(2, 2), QPointF(10, 10));
+        p.drawLine(QPointF(10, 2), QPointF(2, 10));
+    };
+}
+
+Painter dockFloat(const QColor &color)
+{
+    return [=](QPainter &p) {
+        p.setPen(QPen(color, 1.3));
+        p.setBrush(Qt::NoBrush);
+        p.drawRoundedRect(QRectF(4.5, 1.5, 6, 6), 1, 1);           // back
+        p.drawRoundedRect(QRectF(1.5, 4.5, 6, 6), 1, 1);           // front
     };
 }
 
@@ -418,7 +445,7 @@ QString ModernStyle::writeImages() const
     if (QFile::exists(prefix + QStringLiteral("chevron-down.png")))
         return prefix;    // already drawn
 
-    const QSize arrow(10, 10), indicator(16, 16);
+    const QSize arrow(10, 10), indicator(16, 16), dockButton(12, 12);
     auto save = [&](const char *name, QSize size, const Painter &paint) {
         saveImage(prefix + QLatin1String(name) + QStringLiteral(".png"), size, paint);
     };
@@ -442,6 +469,9 @@ QString ModernStyle::writeImages() const
     save("radio-checked-hover", indicator, radioButton({}, c["accentHover"], true, c["accentText"]));
     save("radio-disabled", indicator, radioButton(c["border"], c["window"], false, {}));
     save("radio-checked-disabled", indicator, radioButton({}, c["border"], true, c["textDisabled"]));
+
+    save("dock-close", dockButton, dockClose(c["text"]));
+    save("dock-float", dockButton, dockFloat(c["text"]));
     return prefix;
 }
 

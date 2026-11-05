@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
     if (parser.isSet("tab"))
         mainWindow->showTab(parser.value("tab").toInt());
     window.setContent(mainWindow);
-    window.resize(900, 620);
+    window.resize(1100, 680);
     window.show();
 
     if (parser.isSet("screenshot")) {

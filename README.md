@@ -25,6 +25,7 @@ Version 2 of this fork brings the original [Qt-Frameless-Window-DarkStyle](https
 - Switch at run time with `setTheme()`, change the accent with `setAccentColor()`.
 - Based on Qt's Fusion style, plus one readable style sheet (`modernstyle/modernstyle.qss`) with named colours (`@accent`, `@border`, ...) you can edit.
 - Check boxes, radio buttons and arrows are drawn in the theme's colours at 1× and 2×: no image files, no Qt SVG module needed.
+- **Dock widgets are panels like Slate's cards**: a lighter body (`$card-bg`, `#32383e`) and a header-coloured title bar (`$card-cap-bg`, `#515960`) with rounded top corners and clear close / float buttons. Splitter handles, the gaps between dock widgets and the menu and toolbar separators use `palette(alternate-base)`.
 - Toolbar buttons light up on hover like push buttons, checked ones included (a checked button gets brighter under the mouse).
 - Long combo box lists scroll: `style->setComboPopupMaxHeight(240)` caps every drop-down at 240 px, and `combo->setProperty("popupMaxHeight", 120)` sets a limit for a single combo box. Without either, `QComboBox::maxVisibleItems()` (10) applies.
 - `DarkStyle` still exists: `QApplication::setStyle(new DarkStyle)` keeps working (always dark).

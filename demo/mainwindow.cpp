@@ -15,8 +15,15 @@
 #include <QtMath>
 #endif
 
+#include <QCheckBox>
 #include <QComboBox>
+#include <QDockWidget>
+#include <QFormLayout>
 #include <QLabel>
+#include <QLineEdit>
+#include <QListWidget>
+#include <QPlainTextEdit>
+#include <QSpinBox>
 #include <QToolBar>
 
 MainWindow::MainWindow(ModernStyle *style, QWidget *parent)
@@ -46,6 +53,39 @@ MainWindow::MainWindow(ModernStyle *style, QWidget *parent)
         ui->mainToolBar->addWidget(new QLabel(tr("  Theme: "), this));
         ui->mainToolBar->addWidget(themes);
     }
+
+    // Dock widgets: a form, a list (tabbed with the form) and a log. They
+    // are panels like Slate's cards: a lighter background with a header.
+    auto *properties = new QWidget;
+    auto *form = new QFormLayout(properties);
+    form->addRow(tr("Name"), new QLineEdit(tr("Signal 1")));
+    auto *rate = new QSpinBox;
+    rate->setRange(1, 10000);
+    rate->setValue(250);
+    rate->setSuffix(tr(" Hz"));
+    form->addRow(tr("Rate"), rate);
+    form->addRow(QString(), new QCheckBox(tr("Enabled")));
+    auto *propertiesDock = new QDockWidget(tr("Properties"), this);
+    propertiesDock->setObjectName(QStringLiteral("propertiesDock"));
+    propertiesDock->setWidget(properties);
+    addDockWidget(Qt::RightDockWidgetArea, propertiesDock);
+
+    auto *layers = new QListWidget;
+    layers->addItems({ tr("Background"), tr("Grid"), tr("Signals"), tr("Markers") });
+    auto *layersDock = new QDockWidget(tr("Layers"), this);
+    layersDock->setObjectName(QStringLiteral("layersDock"));
+    layersDock->setWidget(layers);
+    addDockWidget(Qt::RightDockWidgetArea, layersDock);
+    tabifyDockWidget(propertiesDock, layersDock);
+    propertiesDock->raise();
+
+    auto *log = new QPlainTextEdit;
+    log->setReadOnly(true);
+    log->setPlainText(tr("12:00:01  Started\n12:00:02  Connected to device\n12:00:05  Recording"));
+    auto *logDock = new QDockWidget(tr("Log"), this);
+    logDock->setObjectName(QStringLiteral("logDock"));
+    logDock->setWidget(log);
+    addDockWidget(Qt::RightDockWidgetArea, logDock);
 
 #ifdef DEMO_WITH_QWT
     // A Qwt plot with a few curves, styled by qwtmodernstyle.h
