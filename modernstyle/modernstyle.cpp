@@ -20,25 +20,30 @@ namespace {
 
 // Light and dark colours. The style sheet refers to them as @name
 // (e.g. @border); the palette is built from them too.
+//
+// The dark theme follows Bootswatch's "Slate" theme for Bootstrap
+// (https://bootswatch.com/slate/, dist/slate/_variables.scss), so a Qt app
+// and a web front end using Slate look alike. Slate's names and Sass
+// expressions are noted next to each colour.
 QHash<QString, QColor> themeColors(bool dark, const QColor &accent)
 {
     QHash<QString, QColor> c;
     if (dark) {
-        c["window"] = QColor("#202020");          // window background
-        c["surface"] = QColor("#2b2b2b");         // text fields, lists, tables
-        c["surfaceAlt"] = QColor("#323232");      // alternating rows, headers
-        c["control"] = QColor("#2f2f2f");         // buttons
-        c["controlHover"] = QColor("#3a3a3a");
-        c["controlPressed"] = QColor("#272727");
-        c["border"] = QColor("#3d3d3d");
-        c["borderStrong"] = QColor("#525252");
-        c["text"] = QColor("#f2f2f2");
-        c["textSecondary"] = QColor("#a6a6a6");
-        c["textDisabled"] = QColor("#6e6e6e");
-        c["menu"] = QColor("#2c2c2c");
-        c["tooltip"] = QColor("#2c2c2c");
-        c["tab"] = QColor("#2b2b2b");             // unselected tabs, scroll bar tracks
-        c["tabHover"] = QColor("#363636");
+        c["window"] = QColor("#272b30");          // $body-bg ($gray-900)
+        c["surface"] = QColor("#32383e");         // $list-group-bg, $card-bg: lighten($body-bg, 5%)
+        c["surfaceAlt"] = QColor("#3c4248");      // table stripes: rgba($white, .05) over that
+        c["control"] = QColor("#3a3f44");         // $gray-800 (Slate's buttons, dropdowns)
+        c["controlHover"] = QColor("#3e444c");    // $list-group-hover-bg: lighten($body-bg, 10%)
+        c["controlPressed"] = QColor("#2b2f32");  // shade-color($gray-800, 26%)
+        c["border"] = QColor("#101113");          // rgba($black, .6) over $body-bg: all of Slate's borders
+        c["borderStrong"] = QColor("#52575c");    // $gray-700
+        c["text"] = QColor("#e9ecef");            // $gray-200 (headings, active items)
+        c["textSecondary"] = QColor("#aaaaaa");   // $body-color
+        c["textDisabled"] = QColor("#7a8288");    // $gray-600
+        c["menu"] = QColor("#3a3f44");            // $dropdown-bg
+        c["tooltip"] = QColor("#32383e");         // $popover-bg
+        c["tab"] = QColor("#1c1e22");             // scroll bar tracks: $progress-bg, darken($gray-900, 5%)
+        c["tabHover"] = QColor("#3e444c");
     } else {
         c["window"] = QColor("#f3f3f3");
         c["surface"] = QColor("#ffffff");
@@ -65,6 +70,51 @@ QHash<QString, QColor> themeColors(bool dark, const QColor &accent)
     selection.setAlpha(dark ? 90 : 60);
     c["selection"] = selection;               // e.g. hovered menu items
     return c;
+}
+
+// A vertical gradient as Bootstrap's gradient-y-three-colors() makes it:
+// top colour, a middle colour reached at `position` (0..1), bottom colour
+QString verticalGradient(const char *top, const char *middle, double position, const char *bottom)
+{
+    return QStringLiteral("qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 %1, stop:%2 %3, stop:1 %4)")
+        .arg(QLatin1String(top)).arg(position).arg(QLatin1String(middle)).arg(QLatin1String(bottom));
+}
+
+// Fills for buttons and tabs. The style sheet refers to them as @name like
+// the colours, but they can be gradients. Dark (Slate): the gradients of
+// Slate's .btn and .nav-tabs (_bootswatch.scss) - raised, darker when
+// hovered and pressed, near-black border. Light: plain colours.
+QHash<QString, QString> themeFills(bool dark, const QHash<QString, QColor> &c)
+{
+    QHash<QString, QString> f;
+    if (dark) {
+        // btn-shadow($gray-800): tint 5% -> $gray-800 at 20% -> shade 20%
+        const QString raised = verticalGradient("#44494d", "#3a3f44", 0.2, "#2e3236");
+        // btn-shadow-inverse($gray-800): shade 16% -> shade 10% at 40% -> shade 6%
+        const QString sunken = verticalGradient("#313539", "#34393d", 0.4, "#373b40");
+        f["buttonFill"] = raised;
+        f["buttonHoverFill"] = sunken;
+        // btn-shadow-inverse-dark($gray-800): shade 36% -> 30% at 40% -> 26%
+        f["buttonPressedFill"] = verticalGradient("#25282c", "#292c30", 0.4, "#2b2f32");
+        f["buttonBorder"] = QStringLiteral("rgba(0, 0, 0, 153)");      // rgba($black, .6)
+        f["buttonHoverBorder"] = f["buttonBorder"];
+        f["buttonText"] = QStringLiteral("#ffffff");
+        // Slate's tabs: unselected sunken, hovered and selected raised
+        f["tabFill"] = sunken;
+        f["tabHoverFill"] = raised;
+        f["tabSelectedFill"] = raised;
+    } else {
+        f["buttonFill"] = c["control"].name();
+        f["buttonHoverFill"] = c["controlHover"].name();
+        f["buttonPressedFill"] = c["controlPressed"].name();
+        f["buttonBorder"] = c["border"].name();
+        f["buttonHoverBorder"] = c["borderStrong"].name();
+        f["buttonText"] = c["text"].name();
+        f["tabFill"] = c["tab"].name();
+        f["tabHoverFill"] = c["tabHover"].name();
+        f["tabSelectedFill"] = c["window"].name();
+    }
+    return f;
 }
 
 // --- Images for the style sheet --------------------------------------------------
@@ -272,20 +322,24 @@ QString ModernStyle::styleSheet() const
     // @icons/<name>.png: the images drawn for the current colours
     qss.replace(QStringLiteral("@icons/"), writeImages());
 
-    // Replace each @name with its colour. Longest names first, so @accentHover
-    // isn't taken for @accent followed by "Hover".
+    // Every @name and its value: the colours, then the button and tab fills
     const Colors c = colors();
-    QStringList names = c.keys();
-    std::sort(names.begin(), names.end(),
-              [](const QString &a, const QString &b) { return a.size() > b.size(); });
-    for (const QString &name : names) {
-        const QColor color = c[name];
-        const QString value = color.alpha() == 255
+    QHash<QString, QString> values = themeFills(isDark(), c);
+    for (auto it = c.cbegin(); it != c.cend(); ++it) {
+        const QColor color = it.value();
+        values[it.key()] = color.alpha() == 255
             ? color.name()
             : QStringLiteral("rgba(%1, %2, %3, %4)")
                   .arg(color.red()).arg(color.green()).arg(color.blue()).arg(color.alpha());
-        qss.replace(QLatin1Char('@') + name, value);
     }
+
+    // Replace them, longest names first, so @accentHover isn't taken for
+    // @accent followed by "Hover"
+    QStringList names = values.keys();
+    std::sort(names.begin(), names.end(),
+              [](const QString &a, const QString &b) { return a.size() > b.size(); });
+    for (const QString &name : names)
+        qss.replace(QLatin1Char('@') + name, values[name]);
     return qss;
 }
 

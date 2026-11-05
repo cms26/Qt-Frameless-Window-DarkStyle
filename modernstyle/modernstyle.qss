@@ -8,16 +8,18 @@
 
 /* --- Buttons ------------------------------------------------------------- */
 
+/* @buttonFill etc.: plain colours in the light theme, Slate's gradients in
+   the dark theme (themeFills() in modernstyle.cpp) */
 QPushButton {
-    background-color: @control;
-    color: @text;
-    border: 1px solid @border;
+    background: @buttonFill;
+    color: @buttonText;
+    border: 1px solid @buttonBorder;
     border-radius: 6px;
     padding: 5px 16px;
     min-height: 18px;
 }
-QPushButton:hover    { background-color: @controlHover; border-color: @borderStrong; }
-QPushButton:pressed  { background-color: @controlPressed; }
+QPushButton:hover    { background: @buttonHoverFill; border-color: @buttonHoverBorder; }
+QPushButton:pressed  { background: @buttonPressedFill; }
 QPushButton:checked  { background-color: @accent; color: @accentText; border-color: @accent; }
 QPushButton:disabled { color: @textDisabled; background-color: @window; border-color: @border; }
 QPushButton:focus    { border-color: @accent; }
@@ -166,7 +168,7 @@ QTabWidget::tab-bar { left: 10px; }
 
 /* Unselected tabs: their own fill, a gap between them, rounded tops */
 QTabBar::tab {
-    background-color: @tab;
+    background: @tabFill;
     color: @textSecondary;
     border: 1px solid @border;
     border-top-left-radius: 10px;
@@ -175,11 +177,11 @@ QTabBar::tab {
     margin-right: 4px;
     margin-top: 3px;              /* a little lower than the selected tab */
 }
-QTabBar::tab:hover:!selected { background-color: @tabHover; color: @text; }
+QTabBar::tab:hover:!selected { background: @tabHoverFill; color: @text; }
 
 /* The selected tab: the pane's colour, joined to the pane, accent line on top */
 QTabBar::tab:selected {
-    background-color: @window;
+    background: @tabSelectedFill;
     color: @text;
     border-color: @border;
     border-top: 2px solid @accent;
