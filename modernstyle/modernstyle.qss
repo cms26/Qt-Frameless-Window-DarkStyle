@@ -37,11 +37,21 @@ QToolButton {
     border-radius: 6px;
     padding: 4px;
 }
-QToolButton:hover   { background-color: @controlHover; border-color: @border; }
-QToolButton:pressed { background-color: @controlPressed; }
-QToolButton:checked { background-color: @selection; border-color: @accent; }
+/* Like buttons, tool buttons (toolbars) light up under the mouse - checked
+   ones too. :checked:hover comes after :checked, so it wins. */
+QToolButton:hover           { background: @toolHoverFill; border-color: @buttonBorder; }
+QToolButton:pressed         { background: @buttonPressedFill; border-color: @buttonBorder; }
+QToolButton:checked         { background: @toolCheckedFill; border-color: @accent; }
+QToolButton:checked:hover   { background: @toolCheckedHoverFill; border-color: @accentHover; }
+QToolButton:checked:pressed { background: @buttonPressedFill; border-color: @accent; }
 
 /* --- Text fields, spin boxes, combo boxes ----------------------------------- */
+
+/* combobox-popup: 0 - a list below the combo box that shows at most
+   maxVisibleItems() (Qt's default: 10) and then scrolls. Without it, a
+   styled combo box opens a popup as tall as all its items (up to the whole
+   screen). ModernStyle::setComboPopupMaxHeight() limits it in pixels too. */
+QComboBox { combobox-popup: 0; }
 
 QLineEdit, QTextEdit, QPlainTextEdit, QAbstractSpinBox, QComboBox {
     background-color: @surface;
