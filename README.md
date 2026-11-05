@@ -19,6 +19,7 @@ Version 2 of this fork brings the original [Qt-Frameless-Window-DarkStyle](https
 - Takes its title and icon from the content (e.g. your `QMainWindow`) and follows later title changes.
 
 **ModernStyle**
+- **The dark theme matches [Bootswatch Slate](https://bootswatch.com/slate/)**, so a Qt app and a Bootstrap web front end using Slate look alike: the same background (`#272b30`), panels, near-black borders, grey text, and Slate's gradient buttons and tabs (raised, sunken on hover, darker when pressed). The values come from Slate's own Sass (`_variables.scss`, `_bootswatch.scss`) and were checked pixel by pixel against Slate rendered in a browser. The light theme is ModernStyle's own.
 - Light and dark themes, flat and rounded, with one accent colour for selections, default buttons, focus, sliders, progress bars, check boxes and radio buttons.
 - `Theme::System` (default) follows the OS light/dark setting and **switches live when it changes** (Qt 6.5+; older Qt picks at start-up).
 - Switch at run time with `setTheme()`, change the accent with `setAccentColor()`.
@@ -99,7 +100,7 @@ You can also use only one of the two parts: `ModernStyle` works with ordinary wi
 
 ### Changing the look
 
-The style sheet is [`modernstyle/modernstyle.qss`](modernstyle/modernstyle.qss). Colours are written as `@name` and filled in from the current theme. The names and their light/dark values are in `themeColors()` at the top of [`modernstyle/modernstyle.cpp`](modernstyle/modernstyle.cpp). Change values there, or add your own rules to the sheet; it is compiled in as a resource.
+The style sheet is [`modernstyle/modernstyle.qss`](modernstyle/modernstyle.qss). Colours are written as `@name` and filled in from the current theme. The names and their light/dark values are in `themeColors()` at the top of [`modernstyle/modernstyle.cpp`](modernstyle/modernstyle.cpp), with the Slate variable each dark colour comes from. Buttons and tabs use `@buttonFill`, `@tabFill` and friends (`themeFills()`): plain colours in the light theme, Slate's gradients in the dark one. Change values there, or add your own rules to the sheet; it is compiled in as a resource.
 
 If your application sets its own style sheet with `qApp->setStyleSheet()`, it replaces ModernStyle's. Set style sheets on your own widgets instead (`myWidget->setStyleSheet(...)`), or append your rules to `modernstyle.qss`.
 
