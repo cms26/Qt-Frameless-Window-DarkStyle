@@ -309,6 +309,21 @@ QToolTip {
     padding: 4px 8px;
 }
 
+/* --- Qwt plots (https://qwt.sourceforge.io) ------------------------------------------
+ * Only used when the application uses Qwt. qwtmodernstyle.h also styles what
+ * a style sheet can't reach: curve colours, the grid and the axes.        */
+
+QwtPlot { background: transparent; }
+QwtPlotCanvas {
+    background-color: @surface;
+    border: 1px solid @border;
+    border-radius: 10px;
+}
+QwtScaleWidget { color: @textSecondary; }       /* axis numbers, ticks and titles */
+QwtLegend, QwtLegend QWidget { background: transparent; }
+QwtLegendLabel { color: @text; }
+QwtTextLabel { color: @text; }                  /* the plot's title and footer */
+
 /* --- Frameless window (framelesswindow/): title bar text ------------------------------ */
 
 TitleBar QLabel#titleText          { color: @text; }

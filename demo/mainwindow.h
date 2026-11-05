@@ -20,6 +20,8 @@ public:
     explicit MainWindow(ModernStyle *style = nullptr, QWidget *parent = nullptr);
     ~MainWindow() override;
 
+    void showTab(int index);   // in the tab widget (for --tab)
+
 private:
     Ui::MainWindow *ui;
 };

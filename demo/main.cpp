@@ -26,6 +26,7 @@ int main(int argc, char *argv[])
     parser.addHelpOption();
     parser.addOption({ "theme", "Start with this theme: system, light or dark.", "theme", "system" });
     parser.addOption({ "screenshot", "Save a picture of the window to <file> and quit.", "file" });
+    parser.addOption({ "tab", "Show this page of the tab widget (0, 1, ...).", "index" });
     parser.process(app);
 
     ModernStyle::Theme theme = ModernStyle::Theme::System;
@@ -41,7 +42,10 @@ int main(int argc, char *argv[])
     // The frameless window with our main window inside
     FramelessWindow window;
     window.setWindowIcon(QApplication::style()->standardIcon(QStyle::SP_DesktopIcon));
-    window.setContent(new MainWindow(style));
+    auto *mainWindow = new MainWindow(style);
+    if (parser.isSet("tab"))
+        mainWindow->showTab(parser.value("tab").toInt());
+    window.setContent(mainWindow);
     window.resize(900, 620);
     window.show();
 

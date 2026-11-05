@@ -103,6 +103,29 @@ The style sheet is [`modernstyle/modernstyle.qss`](modernstyle/modernstyle.qss).
 
 If your application sets its own style sheet with `qApp->setStyleSheet()`, it replaces ModernStyle's. Set style sheets on your own widgets instead (`myWidget->setStyleSheet(...)`), or append your rules to `modernstyle.qss`.
 
+## Qwt plots
+
+[Qwt](https://qwt.sourceforge.io) plots (6.2 or newer) get the same look in both themes:
+
+![Qwt plot before and after, light and dark](docs/qwt-before-after.png)
+
+Two parts do this:
+
+- **The style sheet** gives the plot canvas a rounded frame and the theme's background, and the axes, title and legend the theme's text colours. It works for every `QwtPlot` automatically, with no Qwt dependency in this library.
+- **`qwtmodernstyle.h`** (optional, header-only; include it where you use Qwt) styles what a style sheet can't reach: curve colours, the grid and the axes.
+
+```cpp
+#include "qwtmodernstyle.h"
+
+QwtModernStyle::follow(plot, style);    // style the plot now and whenever the theme changes
+```
+
+It gives every curve a colour from a set that reads well on light and dark backgrounds, with 2 px antialiased lines. The grid becomes faint solid lines (one is added if the plot has none), and the axes lose their axis line and minor ticks. Leave parts out with options, e.g. `QwtModernStyle::follow(plot, style, QwtModernStyle::Option::All & ~QwtModernStyle::Option::CurveColors)` if your code colours its curves itself. `QwtModernStyle::seriesColor(index, dark)` gives you the colours for your own use (bars, markers). Call `apply()` again after adding curves.
+
+Qwt caches what it draws, so a plot only shows a new theme after a replot. `follow()` does that for you. For plots you don't pass to it, call `plot->replot()` on `ModernStyle::themeChanged`.
+
+The demo shows a **Plot** tab when CMake finds Qwt, e.g. winlibs' `qwt/6.2.0` on `CMAKE_PREFIX_PATH`. `--tab 2` opens it straight away.
+
 ## Upgrading from the Qt 5 version
 
 | Before | Now |
@@ -110,7 +133,7 @@ If your application sets its own style sheet with `qApp->setStyleSheet()`, it re
 | qmake: add `framelesswindow.qrc`, `darkstyle.qrc` and the include paths | CMake: `target_link_libraries(... FramelessWindow::FramelessWindow)` (resources and include paths come with it) |
 | `#include "DarkStyle.h"`, `setStyle(new DarkStyle)` | unchanged (always dark), or `new ModernStyle` for light/dark |
 | `FramelessWindow`, `setContent()`, `setWindowTitle()`, `setWindowIcon()` | unchanged |
-| `darkstyle/darkstyle.qss` + PNG icons | `modernstyle/modernstyle.qss`, images drawn in code |
+| `darkstyle/darkstyle.qss` + 31 PNG icons | `modernstyle/modernstyle.qss`. Check boxes, radio buttons and arrows are drawn in code in the theme's colours; title-bar buttons are drawn by `TitleBarButton`; tree branches and dock-widget buttons come from Qt's Fusion style |
 | `framelesswindow.ui`, `WindowDragger` | built in code (`TitleBar`, `TitleBarButton`) |
 
 The old `ui->windowTitlebar` / `ui->windowFrame` objects no longer exist. Use `window.titleBar()` to reach the title bar.
