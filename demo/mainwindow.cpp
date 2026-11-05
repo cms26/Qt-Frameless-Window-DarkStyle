@@ -26,6 +26,11 @@ MainWindow::MainWindow(ModernStyle *style, QWidget *parent)
     ui->setupUi(this);
     setWindowTitle(QStringLiteral("Qt Frameless Window - Modern Style"));
 
+    // A long list: the drop-down stays within the style's maximum height
+    // (main.cpp) and scrolls
+    for (int i = 1; i <= 40; ++i)
+        ui->comboBox->addItem(tr("Item %1").arg(i));
+
     // Theme switcher in the toolbar
     if (style) {
         auto *themes = new QComboBox(this);

@@ -8,6 +8,8 @@
 #include <QFile>
 #include <QPainter>
 #include <QPainterPath>
+#include <QAbstractItemView>
+#include <QComboBox>
 #include <QMenu>
 #include <QStyleFactory>
 #include <QStyleHints>
@@ -103,6 +105,13 @@ QHash<QString, QString> themeFills(bool dark, const QHash<QString, QColor> &c)
         f["tabFill"] = sunken;
         f["tabHoverFill"] = raised;
         f["tabSelectedFill"] = raised;
+        // Tool buttons (toolbars) are flat until the mouse is over them; then
+        // they light up: Slate's raised button, a step brighter (tint 12%
+        // instead of 5% at the top). Checked: pressed in (btn-shadow-inverse-
+        // dark), lighting up the same way when the mouse is over them.
+        f["toolHoverFill"] = verticalGradient("#53575c", "#474c50", 0.2, "#3a3f44");
+        f["toolCheckedFill"] = verticalGradient("#25282c", "#292c30", 0.4, "#2b2f32");
+        f["toolCheckedHoverFill"] = f["toolHoverFill"];
     } else {
         f["buttonFill"] = c["control"].name();
         f["buttonHoverFill"] = c["controlHover"].name();
@@ -113,6 +122,16 @@ QHash<QString, QString> themeFills(bool dark, const QHash<QString, QColor> &c)
         f["tabFill"] = c["tab"].name();
         f["tabHoverFill"] = c["tabHover"].name();
         f["tabSelectedFill"] = c["window"].name();
+        f["toolHoverFill"] = c["controlHover"].name();
+        QColor checked = c["accent"], checkedHover = c["accent"];
+        checked.setAlpha(45);
+        checkedHover.setAlpha(80);     // lights up: a stronger tint of the accent
+        auto rgba = [](const QColor &color) {
+            return QStringLiteral("rgba(%1, %2, %3, %4)")
+                .arg(color.red()).arg(color.green()).arg(color.blue()).arg(color.alpha());
+        };
+        f["toolCheckedFill"] = rgba(checked);
+        f["toolCheckedHoverFill"] = rgba(checkedHover);
     }
     return f;
 }
@@ -310,6 +329,47 @@ void ModernStyle::polish(QWidget *widget)
     // runs before a widget is first shown.
     if (qobject_cast<QMenu *>(widget) && !widget->testAttribute(Qt::WA_WState_Created))
         widget->setAttribute(Qt::WA_TranslucentBackground);
+
+    // Combo boxes: watch their drop-down list, to keep it within the
+    // maximum height (eventFilter())
+    if (auto *combo = qobject_cast<QComboBox *>(widget))
+        combo->view()->window()->installEventFilter(this);
+}
+
+void ModernStyle::unpolish(QWidget *widget)
+{
+    if (auto *combo = qobject_cast<QComboBox *>(widget))
+        combo->view()->window()->removeEventFilter(this);
+    QProxyStyle::unpolish(widget);
+}
+
+bool ModernStyle::eventFilter(QObject *watched, QEvent *event)
+{
+    // A combo box's drop-down list is being shown: QComboBox has sized it for
+    // its items; make it no taller than the maximum height (the combo box's
+    // own "popupMaxHeight" property, else comboPopupMaxHeight()). The list
+    // inside then scrolls.
+    if (event->type() == QEvent::Show) {
+        auto *popup = qobject_cast<QWidget *>(watched);
+        auto *combo = popup ? qobject_cast<QComboBox *>(popup->parentWidget()) : nullptr;
+        if (combo) {
+            bool ok = false;
+            int maxHeight = combo->property("popupMaxHeight").toInt(&ok);
+            if (!ok)
+                maxHeight = m_comboPopupMaxHeight;
+            if (maxHeight > 0 && popup->height() > maxHeight) {
+                QRect geometry = popup->geometry();
+                // Opened above the combo box (no room below): keep its bottom edge
+                const bool above = geometry.bottom() < combo->mapToGlobal(QPoint(0, 0)).y();
+                if (above)
+                    geometry.setTop(geometry.bottom() - maxHeight + 1);
+                else
+                    geometry.setHeight(maxHeight);
+                popup->setGeometry(geometry);
+            }
+        }
+    }
+    return QProxyStyle::eventFilter(watched, event);
 }
 
 QString ModernStyle::styleSheet() const

@@ -54,12 +54,24 @@ public:
     QColor accentColor() const { return m_accent; }
     void setAccentColor(const QColor &color);
 
+    // The tallest a combo box's drop-down list may be, in pixels; longer
+    // lists scroll. 0 (default): no pixel limit, only QComboBox::
+    // maxVisibleItems() (10 unless changed). A combo box can have its own
+    // limit: combo->setProperty("popupMaxHeight", 200).
+    int comboPopupMaxHeight() const { return m_comboPopupMaxHeight; }
+    void setComboPopupMaxHeight(int pixels) { m_comboPopupMaxHeight = qMax(0, pixels); }
+
     // QStyle
     QPalette standardPalette() const override;
     void polish(QPalette &palette) override;
     void polish(QApplication *app) override;
     void polish(QWidget *widget) override;
+    void unpolish(QWidget *widget) override;
     using QProxyStyle::polish;
+    using QProxyStyle::unpolish;
+
+protected:
+    bool eventFilter(QObject *watched, QEvent *event) override;
 
 signals:
     // After the application switched to the light or the dark theme
@@ -76,5 +88,6 @@ private:
     QColor m_accent;
     QPalette m_systemPalette;        // the palette before this style changed it
     bool m_applying = false;
+    int m_comboPopupMaxHeight = 0;
     mutable std::unique_ptr<QTemporaryDir> m_imageDir;   // the drawn images
 };
