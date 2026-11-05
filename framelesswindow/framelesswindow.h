@@ -1,69 +1,72 @@
-/*
-###############################################################################
-#                                                                             #
-# The MIT License                                                             #
-#                                                                             #
-# Copyright (C) 2017 by Juergen Skrotzky (JorgenVikingGod@gmail.com)          #
-#               >> https://github.com/Jorgen-VikingGod                        #
-#                                                                             #
-# Sources: https://github.com/Jorgen-VikingGod/Qt-Frameless-Window-DarkStyle  #
-#                                                                             #
-###############################################################################
-*/
+// FramelessWindow - a top-level window without the system title bar and
+// frame, with its own title bar, rounded corners and a soft shadow. Put any
+// widget (e.g. your QMainWindow) inside it:
+//
+//   FramelessWindow window;
+//   window.setContent(new MainWindow);
+//   window.show();
+//
+// Moving (drag the title bar) and resizing (drag the edges) are done by the
+// window system where it supports it (Windows, X11, Wayland; macOS for
+// moving), so they behave natively, e.g. snapping to screen edges.
+//
+// MIT License, see LICENSE. Based on FramelessWindow by Juergen Skrotzky
+// (https://github.com/Jorgen-VikingGod/Qt-Frameless-Window-DarkStyle).
 
-#ifndef FRAMELESSWINDOW_H
-#define FRAMELESSWINDOW_H
+#pragma once
 
+#include <QRect>
 #include <QWidget>
 
-namespace Ui {
-class FramelessWindow;
-}
+class TitleBar;
 
-class FramelessWindow : public QWidget {
-  Q_OBJECT
+class FramelessWindow : public QWidget
+{
+    Q_OBJECT
 
- public:
-  explicit FramelessWindow(QWidget *parent = Q_NULLPTR);
-  virtual ~FramelessWindow();
-  void setContent(QWidget *w);
+public:
+    explicit FramelessWindow(QWidget *parent = nullptr);
 
- private:
-  bool leftBorderHit(const QPoint &pos);
-  bool rightBorderHit(const QPoint &pos);
-  bool topBorderHit(const QPoint &pos);
-  bool bottomBorderHit(const QPoint &pos);
-  void styleWindow(bool bActive, bool bNoState);
+    // The widget shown below the title bar. The window takes ownership. If
+    // the window has no title or icon yet, it uses the content's (and follows
+    // later changes of the content's title).
+    void setContent(QWidget *content);
+    QWidget *content() const { return m_content; }
 
- public slots:
-  void setWindowTitle(const QString &text);
-  void setWindowIcon(const QIcon &ico);
+    TitleBar *titleBar() const { return m_titleBar; }
 
- private slots:
-  void on_applicationStateChanged(Qt::ApplicationState state);
-  void on_minimizeButton_clicked();
-  void on_restoreButton_clicked();
-  void on_maximizeButton_clicked();
-  void on_closeButton_clicked();
-  void on_windowTitlebar_doubleClicked();
+    // Whether the window can be resized by dragging its edges (default: yes)
+    void setResizable(bool resizable) { m_resizable = resizable; }
+    bool isResizable() const { return m_resizable; }
 
- protected:
-  virtual void changeEvent(QEvent *event);
-  virtual void mouseDoubleClickEvent(QMouseEvent *event);
-  virtual void checkBorderDragging(QMouseEvent *event);
-  virtual void mousePressEvent(QMouseEvent *event);
-  virtual void mouseReleaseEvent(QMouseEvent *event);
-  virtual bool eventFilter(QObject *obj, QEvent *event);
+public slots:
+    // Same as QWidget's; kept as slots for compatibility with the original
+    // FramelessWindow
+    void setWindowTitle(const QString &title) { QWidget::setWindowTitle(title); }
+    void setWindowIcon(const QIcon &icon) { QWidget::setWindowIcon(icon); }
 
- private:
-  Ui::FramelessWindow *ui;
-  QRect m_StartGeometry;
-  const quint8 CONST_DRAG_BORDER_SIZE = 15;
-  bool m_bMousePressed;
-  bool m_bDragTop;
-  bool m_bDragLeft;
-  bool m_bDragRight;
-  bool m_bDragBottom;
+protected:
+    void paintEvent(QPaintEvent *event) override;
+    void changeEvent(QEvent *event) override;
+    bool event(QEvent *event) override;
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
+
+private:
+    bool isMaximizedOrFullScreen() const { return isMaximized() || isFullScreen(); }
+    int shadowMargin() const;        // transparent border for the shadow (0 when maximized)
+    QRect frameRect() const;         // the visible window, inside the shadow
+    Qt::Edges edgesAt(const QPoint &pos) const;
+    void updateLayout();
+
+    TitleBar *m_titleBar;
+    QWidget *m_contentArea;
+    QWidget *m_content = nullptr;
+    bool m_resizable = true;
+
+    // Resizing ourselves, for platforms whose window system can't (macOS)
+    Qt::Edges m_manualResizeEdges;
+    QPoint m_pressGlobalPos;
+    QRect m_startGeometry;
 };
-
-#endif  // FRAMELESSWINDOW_H

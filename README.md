@@ -1,108 +1,127 @@
-# Qt Frameless Window with DarkStyle
-simple MainWindow class implementation with frameless window and custom dark style. 
+# Qt Frameless Window with Modern Style
 
-It adds also support for titlebar and buttons (minimize, maximize, close)
+A frameless Qt 6 window with its own title bar, rounded corners and a soft shadow, plus **ModernStyle**: a flat, rounded Qt Widgets style with a **light and a dark theme that follows the operating system**. Put your existing `QMainWindow` inside and it gets the modern look without other changes.
 
-Look is based on the VS2013 application window (flat and frameless window)
+| Light | Dark |
+|---|---|
+| ![light](docs/screenshot-light.png) | ![dark](docs/screenshot-dark.png) |
 
-<table>
-  <tr><th colspan="2">Screenshots</th></tr>
-  <tr><th>mac enabled</th><th>mac disabled</th></tr>
-  <tr>
-    <td><img src="https://github.com/Jorgen-VikingGod/Qt-Frameless-Window-DarkStyle/blob/master/screenshot_mac_frameless_window_qt_dark_style_enabled.png" title="screenshot mac frameless window qt dark style enabled" /></td>
-    <td><img src="https://github.com/Jorgen-VikingGod/Qt-Frameless-Window-DarkStyle/blob/master/screenshot_mac_frameless_window_qt_dark_style_disabled.png" title="screenshot mac frameless window qt dark style disabled" /></td>
-  </tr>
-</table>
+Version 2 of this fork brings the original [Qt-Frameless-Window-DarkStyle](https://github.com/Jorgen-VikingGod/Qt-Frameless-Window-DarkStyle) (Qt 5, qmake) to **Qt 6 and CMake**.
 
+## Features
 
-## Qt and OS
-* tested with Qt5.5.0, Qt5.9.0 and Qt5.10.0
-* tested on Windows 7, Windows 10,MacOSX 10.12.5 and MacOS 10.13.2
+**FramelessWindow**
+- Own title bar: icon, title, minimize / maximize (restore) / close buttons drawn in code, so they're sharp at any display scaling and follow the theme. The close button turns red on hover.
+- **Native moving and resizing**: dragging the title bar or an edge hands over to the window system (`QWindow::startSystemMove()` / `startSystemResize()`). That gives native behaviour like snapping to screen edges, multi-monitor moves, and works on Wayland. Where the window system can't (macOS for resizing, some X11 window managers), the window moves or resizes itself.
+- Resize from all four edges and corners, with the matching mouse cursors.
+- Double-click the title bar to maximize or restore. Dragging a maximized window restores it under the mouse.
+- Rounded corners and a shadow, none of either when maximized. Taskbar minimize and the window menu (Alt+Space) keep working on Windows.
+- Takes its title and icon from the content (e.g. your `QMainWindow`) and follows later title changes.
 
-## PyQt5
-Here is an [unofficial Python port](https://github.com/gmarull/qtmodern) of my implementation.
+**ModernStyle**
+- Light and dark themes, flat and rounded, with one accent colour for selections, default buttons, focus, sliders, progress bars, check boxes and radio buttons.
+- `Theme::System` (default) follows the OS light/dark setting and **switches live when it changes** (Qt 6.5+; older Qt picks at start-up).
+- Switch at run time with `setTheme()`, change the accent with `setAccentColor()`.
+- Based on Qt's Fusion style, plus one readable style sheet (`modernstyle/modernstyle.qss`) with named colours (`@accent`, `@border`, ...) you can edit.
+- Check boxes, radio buttons and arrows are drawn in the theme's colours at 1× and 2×: no image files, no Qt SVG module needed.
+- `DarkStyle` still exists: `QApplication::setStyle(new DarkStyle)` keeps working (always dark).
 
-## Alternative Window class
-* take a look to this awesome project: https://github.com/antonypro/QGoodWindow
-* most of the open todos of Qt-Frameless-Window is handled by QGoodWindow already for Linux, MacOS and Windows.
+## Requirements
 
-## How to use
-* add additional include plath to **framelesswindow**
-* add resources **framelesswindow.qrc** and **darkstyle.qrc**
-* add ``#include "framelesswindow.h"`` into **main.cpp**, create window ``FramelessWindow framelessWindow;`` and assign your mainwindow object as content ``framelessWindow.setContent(mainWindow);`` and show it ``framelessWindow.show();``
-* add ``#include "DarkStyle.h"`` into **main.cpp** and call ``a.setStyle(new DarkStyle);``
+- Qt **6.2** or newer (Widgets). Following the OS theme live needs Qt **6.5**.
+- CMake 3.16+ and a C++17 compiler.
+- Windows, Linux (X11 with a compositor, or Wayland), macOS.
 
+## Build the demo
 
-```qt
-#include <QApplication>
-#include "DarkStyle.h"
+```bash
+cmake -S . -B build -G Ninja -DCMAKE_PREFIX_PATH=/path/to/Qt/6.x.y/<kit>
+cmake --build build
+./build/QtFramelessWindowDemo                 # Windows: build\QtFramelessWindowDemo.exe
+./build/QtFramelessWindowDemo --theme dark    # or light / system
+```
+
+The toolbar's **Theme** box switches between System, Light and Dark while it runs. `--screenshot file.png` saves a picture of the window and exits (that's how the screenshots above are made).
+
+## Use it in your application
+
+Add this repository to your project (a git submodule, a copy, or `FetchContent`) and link the library:
+
+```cmake
+add_subdirectory(third_party/Qt-Frameless-Window-DarkStyle)
+target_link_libraries(MyApp PRIVATE FramelessWindow::FramelessWindow)
+```
+
+or without copying it:
+
+```cmake
+include(FetchContent)
+FetchContent_Declare(FramelessWindow
+    GIT_REPOSITORY https://github.com/cms26/Qt-Frameless-Window-DarkStyle.git
+    GIT_TAG master)
+FetchContent_MakeAvailable(FramelessWindow)
+target_link_libraries(MyApp PRIVATE FramelessWindow::FramelessWindow)
+```
+
+The demo is only built when this is the top-level project (`FRAMELESSWINDOW_BUILD_DEMO`).
+
+```cpp
 #include "framelesswindow.h"
-#include "mainwindow.h"
+#include "modernstyle.h"
 
 int main(int argc, char *argv[])
 {
-  QApplication a(argc, argv);
+    QApplication app(argc, argv);
 
-  // style our application with custom dark style
-  QApplication::setStyle(new DarkStyle);
-  //QApplication::setPalette(QApplication::style()->standardPalette());
+    auto *style = new ModernStyle;               // follows the OS; or ModernStyle(ModernStyle::Theme::Dark)
+    QApplication::setStyle(style);               // the application takes ownership
 
-  // create frameless window (and set windowState or title)
-  FramelessWindow framelessWindow;
-  //framelessWindow.setWindowState(Qt::WindowMaximized);
-  //framelessWindow.setWindowTitle("test title");
-  //framelessWindow.setWindowIcon(a.style()->standardIcon(QStyle::SP_DesktopIcon));
-  
-  // create our mainwindow instance
-  MainWindow *mainWindow = new MainWindow;
-
-  // add the mainwindow to our custom frameless window
-  framelessWindow.setContent(mainWindow);
-  framelessWindow.show();
-
-  return a.exec();
+    FramelessWindow window;
+    window.setContent(new MainWindow);           // your QMainWindow (or any widget)
+    window.resize(1000, 700);
+    window.show();
+    return app.exec();
 }
 ```
 
+At run time:
 
-## features
-* frameless window
-* custom dark style (based on **Fusion style** with dark palette and custom stylesheets)
-* title bar
-* buttons (minimize | restore | maximize | close)
-* move window by drag the title bar
-* dobule click title bar to toggle between window styte (maximize and normal)
-* use of native events, like minimizing or system menu
+```cpp
+style->setTheme(ModernStyle::Theme::Light);      // System, Light or Dark
+style->setAccentColor(QColor("#7c3aed"));        // any colour
+connect(style, &ModernStyle::themeChanged, this, [](bool dark) { /* e.g. swap your own icons */ });
 
+window.setResizable(false);                      // fixed size, no resize cursors
+window.titleBar();                               // the title bar widget, e.g. to add widgets to it
+```
 
-## todo
-* [ ] [resize window on each corner [#1]](https://github.com/Jorgen-VikingGod/Qt-Frameless-Window-DarkStyle/issues/1) (some work done by [notecola](https://github.com/notecola) :+1:)
-* [ ] [snap on screen edges [#3]](https://github.com/Jorgen-VikingGod/Qt-Frameless-Window-DarkStyle/issues/3)
+You can also use only one of the two parts: `ModernStyle` works with ordinary windows, and `FramelessWindow` with any other style.
 
+### Changing the look
 
-## thanks
-Many thanks goes to the [Qt Forum](https://forum.qt.io/topic/80654/how-to-create-vs2013-like-frameless-window-with-dark-style) and especially to [Chris Kawa](https://forum.qt.io/user/chris-kawa) for pointing me to some usual issues and hints of great must have features. 
+The style sheet is [`modernstyle/modernstyle.qss`](modernstyle/modernstyle.qss). Colours are written as `@name` and filled in from the current theme. The names and their light/dark values are in `themeColors()` at the top of [`modernstyle/modernstyle.cpp`](modernstyle/modernstyle.cpp). Change values there, or add your own rules to the sheet; it is compiled in as a resource.
 
+If your application sets its own style sheet with `qApp->setStyleSheet()`, it replaces ModernStyle's. Set style sheets on your own widgets instead (`myWidget->setStyleSheet(...)`), or append your rules to `modernstyle.qss`.
 
-## Licence
-> The MIT License
->
-> Copyright (c) 2018, Juergen Skrotzky (https://github.com/Jorgen-VikingGod, JorgenVikingGod@gmail.com)
->
-> Permission is hereby granted, free of charge, to any person obtaining a copy
-> of this software and associated documentation files (the "Software"), to deal
-> in the Software without restriction, including without limitation the rights
-> to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-> copies of the Software, and to permit persons to whom the Software is
-> furnished to do so, subject to the following conditions:
->
-> The above copyright notice and this permission notice shall be included in
-> all copies or substantial portions of the Software.
->
-> THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-> IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-> FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-> AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-> LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-> OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-> THE SOFTWARE.
+## Upgrading from the Qt 5 version
+
+| Before | Now |
+|---|---|
+| qmake: add `framelesswindow.qrc`, `darkstyle.qrc` and the include paths | CMake: `target_link_libraries(... FramelessWindow::FramelessWindow)` (resources and include paths come with it) |
+| `#include "DarkStyle.h"`, `setStyle(new DarkStyle)` | unchanged (always dark), or `new ModernStyle` for light/dark |
+| `FramelessWindow`, `setContent()`, `setWindowTitle()`, `setWindowIcon()` | unchanged |
+| `darkstyle/darkstyle.qss` + PNG icons | `modernstyle/modernstyle.qss`, images drawn in code |
+| `framelesswindow.ui`, `WindowDragger` | built in code (`TitleBar`, `TitleBarButton`) |
+
+The old `ui->windowTitlebar` / `ui->windowFrame` objects no longer exist. Use `window.titleBar()` to reach the title bar.
+
+## Platform notes
+
+- **Windows**: moving, resizing, snapping by dragging to the screen edges, and minimize via the taskbar are native. Windows 11's snap layout flyout (hovering the maximize button) isn't offered: it needs Windows-specific code that answers the system's hit-testing for the maximize button.
+- **Linux / X11**: rounded corners and the shadow need a compositing window manager (all common desktops have one); without one, the corners and shadow area are black.
+- **Linux / Wayland**: moving and resizing only work through the compositor, which `startSystemMove()` / `startSystemResize()` use.
+- **macOS**: there are no traffic-light buttons; the title bar uses the same buttons as on Windows and Linux. Resizing falls back to the window resizing itself.
+
+## License
+
+MIT, see [LICENSE](LICENSE). Based on Qt-Frameless-Window-DarkStyle by Juergen Skrotzky.
