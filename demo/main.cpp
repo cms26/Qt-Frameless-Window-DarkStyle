@@ -29,11 +29,11 @@ int main(int argc, char *argv[])
     parser.addOption({ "tab", "Show this page of the tab widget (0, 1, ...).", "index" });
     parser.process(app);
 
-    ModernStyle::Theme theme = ModernStyle::Theme::System;
-    if (parser.value("theme") == QLatin1String("light"))
-        theme = ModernStyle::Theme::Light;
-    else if (parser.value("theme") == QLatin1String("dark"))
-        theme = ModernStyle::Theme::Dark;
+    const ModernStyle::Theme theme = ModernStyle::themeFromName(parser.value("theme"));
+    if (theme == ModernStyle::Theme::Invalid) {
+        qWarning("Unknown theme \"%s\"; one of: system, light, dark", qPrintable(parser.value("theme")));
+        return 1;
+    }
 
     // The style: the application takes ownership
     auto *style = new ModernStyle(theme);

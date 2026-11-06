@@ -23,6 +23,8 @@ Version 2 of this fork brings the original [Qt-Frameless-Window-DarkStyle](https
 - Light and dark themes, flat and rounded, with one accent colour for selections, default buttons, focus, sliders, progress bars, check boxes and radio buttons.
 - `Theme::System` (default) follows the OS light/dark setting and **switches live when it changes** (Qt 6.5+; older Qt picks at start-up).
 - Switch at run time with `setTheme()`, change the accent with `setAccentColor()`.
+- Themes by name, e.g. for a settings dialog or a command-line option: `getThemeNames()` gives `"System", "Light", "Dark"`, `ModernStyle::themeFromName("dark")` the theme (any case; `Theme::Invalid` for an unknown name), `ModernStyle::themeName(theme)` the name back.
+- Splitter handles and the gaps between dock widgets have grip dots and turn the accent colour under the mouse; slider tracks and scroll bar handles are drawn in a colour that stands out on both the window and panels.
 - Based on Qt's Fusion style, plus one readable style sheet (`modernstyle/modernstyle.qss`) with named colours (`@accent`, `@border`, ...) you can edit.
 - Check boxes, radio buttons and arrows are drawn in the theme's colours at 1× and 2×: no image files, no Qt SVG module needed.
 - **Dock widgets are panels like Slate's cards**: a lighter body (`$card-bg`, `#32383e`) and a header-coloured title bar (`$card-cap-bg`, `#515960`) with rounded top corners and clear close / float buttons. Splitter handles, the gaps between dock widgets and the menu and toolbar separators use `palette(alternate-base)`.
@@ -91,7 +93,9 @@ int main(int argc, char *argv[])
 At run time:
 
 ```cpp
-style->setTheme(ModernStyle::Theme::Light);      // System, Light or Dark
+style->setTheme(ModernStyle::Theme::Light);      // System, Light or Dark (Invalid is ignored)
+themeBox->addItems(style->getThemeNames());      // "System", "Light", "Dark"
+style->setTheme(ModernStyle::themeFromName(settings.value("theme").toString()));
 style->setAccentColor(QColor("#7c3aed"));        // any colour
 connect(style, &ModernStyle::themeChanged, this, [](bool dark) { /* e.g. swap your own icons */ });
 

@@ -22,6 +22,7 @@
 #include <QPalette>
 #include <QProxyStyle>
 #include <QString>
+#include <QStringList>
 
 #include <memory>
 
@@ -36,6 +37,7 @@ public:
         System, // follow the operating system's light/dark setting
         Light,
         Dark,
+        Invalid, // not a theme: what themeFromName() returns for an unknown name
     };
     Q_ENUM(Theme)
 
@@ -46,8 +48,17 @@ public:
     Theme theme() const { return m_theme; }
     bool isDark() const;
 
-    // Switch the theme of the running application
+    // Switch the theme of the running application. Theme::Invalid is ignored.
     void setTheme(Theme theme);
+
+    // The themes by name, for a settings dialog or a command line option:
+    // "System", "Light", "Dark" (in the enum's order, without Invalid)
+    QStringList getThemeNames() const;
+
+    // Name <-> theme. themeFromName() ignores case and returns Theme::Invalid
+    // for a name that isn't a theme; themeName(Theme::Invalid) is empty.
+    static Theme themeFromName(const QString &name);
+    static QString themeName(Theme theme);
 
     // The colour of selections, default buttons, focus frames, sliders and
     // progress bars. Default: a blue that suits both themes.

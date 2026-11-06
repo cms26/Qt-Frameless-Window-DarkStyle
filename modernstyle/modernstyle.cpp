@@ -11,6 +11,7 @@
 #include <QAbstractItemView>
 #include <QComboBox>
 #include <QMenu>
+#include <QMetaEnum>
 #include <QStyleFactory>
 #include <QStyleHints>
 #include <QTemporaryDir>
@@ -39,6 +40,9 @@ QHash<QString, QColor> themeColors(bool dark, const QColor &accent)
         c["controlPressed"] = QColor("#2b2f32");  // shade-color($gray-800, 26%)
         c["border"] = QColor("#101113");          // rgba($black, .6) over $body-bg: all of Slate's borders
         c["borderStrong"] = QColor("#52575c");    // $gray-700
+        c["groove"] = QColor("#7a8288");          // slider track, scroll bar handle: $gray-600
+        c["grooveHover"] = QColor("#aaaaaa");     // scroll bar handle under the mouse: $gray-500
+        c["grip"] = QColor("#aaaaaa");            // the dots on splitter handles
         c["text"] = QColor("#e9ecef");            // $gray-200 (headings, active items)
         c["textSecondary"] = QColor("#aaaaaa");   // $body-color
         c["textDisabled"] = QColor("#7a8288");    // $gray-600
@@ -57,6 +61,9 @@ QHash<QString, QColor> themeColors(bool dark, const QColor &accent)
         c["controlPressed"] = QColor("#e6e6e6");
         c["border"] = QColor("#d6d6d6");
         c["borderStrong"] = QColor("#b3b3b3");
+        c["groove"] = QColor("#bdbdbd");
+        c["grooveHover"] = QColor("#8f8f8f");
+        c["grip"] = QColor("#8f8f8f");
         c["text"] = QColor("#1c1c1c");
         c["textSecondary"] = QColor("#5c5c5c");
         c["textDisabled"] = QColor("#a3a3a3");
@@ -203,6 +210,19 @@ Painter dockFloat(const QColor &color)
     };
 }
 
+// Splitter grip: three dots in a row (horizontal) or a column, 2 px each
+Painter gripDots(const QColor &color, bool vertical)
+{
+    return [=](QPainter &p) {
+        p.setPen(Qt::NoPen);
+        p.setBrush(color);
+        for (int i = 0; i < 3; ++i) {
+            const qreal along = 2 + i * 5;          // 2, 7, 12 in a 14 px image
+            p.drawEllipse(vertical ? QPointF(1.5, along) : QPointF(along, 1.5), 1.1, 1.1);
+        }
+    };
+}
+
 // A 16 x 16 check box: an empty rounded square, or filled with a check mark
 // or a dash (indeterminate)
 enum class Mark { None, Check, Dash };
@@ -247,7 +267,7 @@ ModernStyle::~ModernStyle() = default;
 
 ModernStyle::ModernStyle(Theme theme, QStyle *baseStyle)
     : QProxyStyle(baseStyle ? baseStyle : QStyleFactory::create(QStringLiteral("Fusion")))
-    , m_theme(theme)
+    , m_theme(theme == Theme::Invalid ? Theme::System : theme)
     , m_accent(QColor("#2f6fed"))
     , m_systemPalette(QGuiApplication::palette())
 {
@@ -268,6 +288,7 @@ bool ModernStyle::isDark() const
     case Theme::Dark:
         return true;
     case Theme::System:
+    case Theme::Invalid:
         break;
     }
 #if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
@@ -281,8 +302,39 @@ bool ModernStyle::isDark() const
 
 void ModernStyle::setTheme(Theme theme)
 {
+    if (theme == Theme::Invalid)
+        return;
     m_theme = theme;
     apply();
+}
+
+QStringList ModernStyle::getThemeNames() const
+{
+    // From the enum itself (Q_ENUM), so a theme added later shows up here too
+    const QMetaEnum themes = QMetaEnum::fromType<Theme>();
+    QStringList names;
+    for (int i = 0; i < themes.keyCount(); ++i) {
+        if (Theme(themes.value(i)) != Theme::Invalid)
+            names.append(QString::fromLatin1(themes.key(i)));
+    }
+    return names;
+}
+
+ModernStyle::Theme ModernStyle::themeFromName(const QString &name)
+{
+    const QMetaEnum themes = QMetaEnum::fromType<Theme>();
+    for (int i = 0; i < themes.keyCount(); ++i) {
+        if (name.compare(QLatin1String(themes.key(i)), Qt::CaseInsensitive) == 0)
+            return Theme(themes.value(i));
+    }
+    return Theme::Invalid;
+}
+
+QString ModernStyle::themeName(Theme theme)
+{
+    if (theme == Theme::Invalid)
+        return {};
+    return QString::fromLatin1(QMetaEnum::fromType<Theme>().valueToKey(int(theme)));
 }
 
 void ModernStyle::setAccentColor(const QColor &color)
@@ -470,6 +522,8 @@ QString ModernStyle::writeImages() const
     save("radio-disabled", indicator, radioButton(c["border"], c["window"], false, {}));
     save("radio-checked-disabled", indicator, radioButton({}, c["border"], true, c["textDisabled"]));
 
+    save("grip-vertical", QSize(3, 14), gripDots(c["grip"], true));     // QSplitter::handle:horizontal
+    save("grip-horizontal", QSize(14, 3), gripDots(c["grip"], false));  // QSplitter::handle:vertical
     save("dock-close", dockButton, dockClose(c["text"]));
     save("dock-float", dockButton, dockFloat(c["text"]));
     return prefix;
