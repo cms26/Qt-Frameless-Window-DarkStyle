@@ -555,6 +555,24 @@ void syncDockTabIconsLater(QTabBar *tabs)
 void ModernStyle::polish(QWidget *widget)
 {
     QProxyStyle::polish(widget);
+
+    // The application replaced ModernStyle's style sheet (qApp->setStyleSheet()):
+    // its rules are gone, only the palette is left. Say so once. QApplication
+    // keeps a shared copy of the sheet, so a different one is different data;
+    // each new sheet is looked at once (appending to ours is fine).
+    const QString appSheet = qApp->styleSheet();
+    if (!m_warnedSheetReplaced && !m_applying && !m_appliedSheet.isEmpty()
+        && appSheet.constData() != m_appliedSheet.constData()
+        && appSheet.constData() != m_checkedSheet.constData()) {
+        m_checkedSheet = appSheet;
+        if (!appSheet.startsWith(m_appliedSheet)) {
+            m_warnedSheetReplaced = true;
+            qWarning("ModernStyle: the application's style sheet was replaced with "
+                     "qApp->setStyleSheet(), which removes ModernStyle's own rules. Set style "
+                     "sheets on your widgets instead, or append to "
+                     "ModernStyle::currentStyleSheet().");
+        }
+    }
     // Menus: transparent outside their rounded border, so the corners are
     // really round. Must be set before the menu's window exists; polish()
     // runs before a widget is first shown.
@@ -638,8 +656,14 @@ bool ModernStyle::eventFilter(QObject *watched, QEvent *event)
 QString ModernStyle::styleSheet() const
 {
     QFile file(QStringLiteral(":/modernstyle/modernstyle.qss"));
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        // Without the sheet only the palette applies: plain Fusion widgets
+        qWarning("ModernStyle: the style sheet resource :/modernstyle/modernstyle.qss is missing, "
+                 "so only the palette is applied. Link the FramelessWindow::FramelessWindow CMake "
+                 "target (it brings the resource), don't compile the library's .cpp files into "
+                 "your own target.");
         return {};
+    }
     QString qss = QString::fromUtf8(file.readAll());
 
     // @icons/<name>.png: the images drawn for the current colours
@@ -735,7 +759,9 @@ void ModernStyle::apply()
         return;
     m_applying = true;
     QApplication::setPalette(standardPalette());
-    qApp->setStyleSheet(styleSheet());
+    m_appliedSheet = styleSheet();
+    qApp->setStyleSheet(m_appliedSheet);
+    m_warnedSheetReplaced = false;
     m_applying = false;
     emit themeChanged(isDark());
 }

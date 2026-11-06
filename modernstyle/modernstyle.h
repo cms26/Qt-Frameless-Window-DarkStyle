@@ -82,6 +82,12 @@ public:
     bool dockTitleBars() const { return m_dockTitleBars; }
     void setDockTitleBars(bool on) { m_dockTitleBars = on; }
 
+    // The style sheet ModernStyle put on the application, colours filled in.
+    // To add rules for the whole application, append yours:
+    //   qApp->setStyleSheet(style->currentStyleSheet() + myRules);
+    // (re-do that after setTheme() / setAccentColor(), e.g. on themeChanged).
+    QString currentStyleSheet() const { return m_appliedSheet; }
+
     // QStyle
     QPalette standardPalette() const override;
     void polish(QPalette &palette) override;
@@ -110,6 +116,9 @@ private:
     QPalette m_systemPalette;        // the palette before this style changed it
     bool m_applying = false;
     int m_comboPopupMaxHeight = 0;
+    QString m_appliedSheet;          // the sheet apply() set on the application
+    bool m_warnedSheetReplaced = false;
+    QString m_checkedSheet;          // the last other application sheet looked at
     bool m_dockTitleBars = true;
     mutable std::unique_ptr<QTemporaryDir> m_imageDir;   // the drawn images
 };
