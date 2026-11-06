@@ -119,10 +119,19 @@ The style sheet is [`modernstyle/modernstyle.qss`](modernstyle/modernstyle.qss).
 If your application sets its own style sheet with `qApp->setStyleSheet()`, it replaces ModernStyle's, and only the palette is left (ModernStyle then prints a warning). Set style sheets on your own widgets instead (`myWidget->setStyleSheet(...)`), or append your rules to ModernStyle's:
 
 ```cpp
-auto applyMyRules = [style] { qApp->setStyleSheet(style->currentStyleSheet() + myRules); };
-applyMyRules();
-connect(style, &ModernStyle::themeChanged, applyMyRules);   // the sheet is rebuilt for each theme
+style->setExtraStyleSheet(R"(
+    QToolButton#fooName {
+        padding: 5px 7px;
+        background: @buttonFill;               /* ModernStyle's @names work here too */
+        border: 2px groove @buttonBorder;
+        border-radius: 4px;
+    }
+    QToolButton#fooName:hover   { background: @toolHoverFill; }
+    QToolButton#fooName:checked { background: @checkedFill; color: @checkedText; }
+)");
 ```
+
+Your rules come after ModernStyle's, so they win where both style the same thing, and they stay when the theme or accent changes. The `@names` are filled in for the current theme, so one set of rules works in light and dark. A rule with an object name (`#fooName`) beats ModernStyle's `:hover`/`:checked` rules, so give it those states too, as above.
 
 ### If it doesn't look like the screenshots
 

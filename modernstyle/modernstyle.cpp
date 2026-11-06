@@ -460,6 +460,12 @@ QString ModernStyle::themeName(Theme theme)
     return QString::fromLatin1(QMetaEnum::fromType<Theme>().valueToKey(int(theme)));
 }
 
+void ModernStyle::setExtraStyleSheet(const QString &rules)
+{
+    m_extraSheet = rules;
+    apply();
+}
+
 void ModernStyle::setAccentColor(const QColor &color)
 {
     m_accent = color;
@@ -665,6 +671,9 @@ QString ModernStyle::styleSheet() const
         return {};
     }
     QString qss = QString::fromUtf8(file.readAll());
+    // The application's own rules last, so they win over the ones above
+    if (!m_extraSheet.isEmpty())
+        qss += QStringLiteral("\n/* --- setExtraStyleSheet() --- */\n") + m_extraSheet;
 
     // @icons/<name>.png: the images drawn for the current colours
     qss.replace(QStringLiteral("@icons/"), writeImages());
