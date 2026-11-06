@@ -92,6 +92,17 @@ public:
     QString extraStyleSheet() const { return m_extraSheet; }
     void setExtraStyleSheet(const QString &rules);
 
+    // Font sizes for single widgets, two ways:
+    //  - a dynamic property on the widget, e.g. in Qt Designer: "+" > Number
+    //    (or Double), name "fontPointSize", value 14 - or in code:
+    //      label->setProperty("fontPointSize", 14);
+    //  - by object name, for all widgets with that name:
+    //      style->setObjectFontPointSize("titleLabel", 14);
+    // The widget's children use the size too, unless they have their own.
+    // 0 (or a negative size) removes an object name's size.
+    void setObjectFontPointSize(const QString &objectName, qreal pointSize);
+    qreal objectFontPointSize(const QString &objectName) const { return m_objectFontSizes.value(objectName); }
+
     // The style sheet ModernStyle put on the application, colours filled in.
     // To add rules for the whole application, append yours:
     //   qApp->setStyleSheet(style->currentStyleSheet() + myRules);
@@ -134,6 +145,8 @@ private:
     bool m_applying = false;
     int m_comboPopupMaxHeight = 0;
     QString m_extraSheet;            // setExtraStyleSheet()
+    QHash<QString, qreal> m_objectFontSizes;   // setObjectFontPointSize()
+    void applyFontSize(QWidget *widget) const;
     QString m_appliedSheet;          // the sheet apply() set on the application
     bool m_warnedSheetReplaced = false;
     QString m_checkedSheet;          // the last other application sheet looked at

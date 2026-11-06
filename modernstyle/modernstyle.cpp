@@ -528,6 +528,37 @@ QIcon ModernStyle::standardIcon(StandardPixmap icon, const QStyleOption *option,
     return QProxyStyle::standardIcon(icon, option, widget);
 }
 
+void ModernStyle::setObjectFontPointSize(const QString &objectName, qreal pointSize)
+{
+    if (pointSize > 0)
+        m_objectFontSizes.insert(objectName, pointSize);
+    else
+        m_objectFontSizes.remove(objectName);
+    // Widgets that exist already; new ones get it in polish()
+    for (QWidget *widget : QApplication::allWidgets()) {
+        if (widget->objectName() == objectName)
+            applyFontSize(widget);
+    }
+}
+
+// The widget's own "fontPointSize" property wins over a size for its object
+// name. A widget that had a size by name and no longer has one keeps it
+// (fonts don't remember where they came from); set another size instead.
+void ModernStyle::applyFontSize(QWidget *widget) const
+{
+    bool ok = false;
+    qreal size = widget->property("fontPointSize").toReal(&ok);
+    if (!ok || size <= 0)
+        size = m_objectFontSizes.value(widget->objectName(), 0);
+    if (size <= 0)
+        return;
+    QFont font = widget->font();
+    if (qFuzzyCompare(font.pointSizeF(), size))
+        return;                       // already (polish() runs again on theme changes)
+    font.setPointSizeF(size);
+    widget->setFont(font);
+}
+
 void ModernStyle::setExtraStyleSheet(const QString &rules)
 {
     m_extraSheet = rules;
@@ -663,6 +694,9 @@ void ModernStyle::polish(QWidget *widget)
                                                   : SP_ToolBarHorizontalExtensionButton));
         }
     }
+
+    // Font size from the "fontPointSize" property or the object name
+    applyFontSize(widget);
 
     // Combo boxes: watch their drop-down list, to keep it within the
     // maximum height (eventFilter())

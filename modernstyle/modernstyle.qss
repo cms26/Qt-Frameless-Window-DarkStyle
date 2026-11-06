@@ -551,3 +551,44 @@ QwtTextLabel { color: @text; }                  /* the plot's title and footer *
 
 TitleBar QLabel#titleText          { color: @text; }
 TitleBar[active="false"] QLabel#titleText { color: @textSecondary; }
+
+/* --- Frame settings from Qt Designer / code ------------------------------------------
+ * The rules above give text boxes, lists, tables and trees ModernStyle's own
+ * border, which would otherwise override their frameShape / frameShadow. These
+ * follow those settings instead (and come last, so they also win on hover and
+ * focus). Plain QFrame widgets ("Frame" in Designer) aren't styled above, so
+ * their shape and shadow are drawn as usual. A value changed with
+ * setFrameShape() / setFrameShadow() after the widget is shown takes effect
+ * after style()->unpolish(w); style()->polish(w);
+ */
+
+/* frameShape NoFrame: no border at all */
+QFrame[frameShape="NoFrame"] {
+    border: none;
+}
+
+/* frameShadow Plain: a plain line in the stronger border colour, square corners */
+QAbstractItemView[frameShadow="Plain"], QTextEdit[frameShadow="Plain"],
+QPlainTextEdit[frameShadow="Plain"] {
+    border: 1px solid @borderStrong;
+    border-radius: 0;
+}
+
+/* frameShadow Raised: a raised 3D edge */
+QAbstractItemView[frameShadow="Raised"], QTextEdit[frameShadow="Raised"],
+QPlainTextEdit[frameShadow="Raised"] {
+    border: 2px outset @borderStrong;
+    border-radius: 0;
+}
+
+/* frameShadow Sunken is the default for these widgets: ModernStyle's own
+   rounded border, as above. NoFrame wins over any shadow. */
+QAbstractItemView[frameShape="NoFrame"], QTextEdit[frameShape="NoFrame"],
+QPlainTextEdit[frameShape="NoFrame"] {
+    border: none;
+}
+
+/* frame off on line edits, combo boxes and spin boxes: no border */
+QLineEdit[frame="false"], QComboBox[frame="false"], QAbstractSpinBox[frame="false"] {
+    border: none;
+}
