@@ -19,6 +19,7 @@
 
 #include <QColor>
 #include <QHash>
+#include <QIcon>
 #include <QPalette>
 #include <QProxyStyle>
 #include <QString>
@@ -105,6 +106,13 @@ public:
     void unpolish(QWidget *widget) override;
     using QProxyStyle::polish;
     using QProxyStyle::unpolish;
+
+    // The ">>" button of a toolbar too short for its buttons: wider (29 px,
+    // as the original DarkStyle) and drawn in the theme's colours
+    int pixelMetric(PixelMetric metric, const QStyleOption *option = nullptr,
+                    const QWidget *widget = nullptr) const override;
+    QIcon standardIcon(StandardPixmap icon, const QStyleOption *option = nullptr,
+                       const QWidget *widget = nullptr) const override;
 
 protected:
     bool eventFilter(QObject *watched, QEvent *event) override;
