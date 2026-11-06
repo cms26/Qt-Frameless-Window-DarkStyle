@@ -61,8 +61,10 @@ public:
     static QString themeName(Theme theme);
 
     // The colour of selections, default buttons, focus frames, sliders and
-    // progress bars. Default: a blue that suits both themes.
-    QColor accentColor() const { return m_accent; }
+    // progress bars. Default: the theme palette's Highlight (dark
+    // rgb(42, 130, 218), light rgb(90, 154, 209)); setAccentColor(QColor())
+    // goes back to that.
+    QColor accentColor() const { return standardPalette().color(QPalette::Highlight); }
     void setAccentColor(const QColor &color);
 
     // The tallest a combo box's drop-down list may be, in pixels; longer
