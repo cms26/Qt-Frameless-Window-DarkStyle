@@ -20,7 +20,10 @@ QPushButton {
 }
 QPushButton:hover    { background: @buttonHoverFill; border-color: @buttonHoverBorder; }
 QPushButton:pressed  { background: @buttonPressedFill; }
-QPushButton:checked  { background-color: @accent; color: @accentText; border-color: @accent; }
+/* Checked (toggle) buttons: blue, darker when the mouse is over them */
+QPushButton:checked         { background: @checkedFill; color: @checkedText; border-color: @checkedBorder; }
+QPushButton:checked:hover   { background: @checkedHoverFill; }
+QPushButton:checked:pressed { background: @checkedHoverFill; }
 QPushButton:disabled { color: @textDisabled; background-color: @window; border-color: @border; }
 QPushButton:focus    { border-color: @accent; }
 
@@ -37,13 +40,14 @@ QToolButton {
     border-radius: 6px;
     padding: 4px;
 }
-/* Like buttons, tool buttons (toolbars) light up under the mouse - checked
-   ones too. :checked:hover comes after :checked, so it wins. */
+/* Like buttons, tool buttons (toolbars) light up under the mouse. Checked
+   ones are blue like checked buttons and turn darker under the mouse.
+   :checked:hover comes after :checked, so it wins. */
 QToolButton:hover           { background: @toolHoverFill; border-color: @buttonBorder; }
 QToolButton:pressed         { background: @buttonPressedFill; border-color: @buttonBorder; }
-QToolButton:checked         { background: @toolCheckedFill; border-color: @accent; }
-QToolButton:checked:hover   { background: @toolCheckedHoverFill; border-color: @accentHover; }
-QToolButton:checked:pressed { background: @buttonPressedFill; border-color: @accent; }
+QToolButton:checked         { background: @checkedFill; color: @checkedText; border-color: @checkedBorder; }
+QToolButton:checked:hover   { background: @checkedHoverFill; border-color: @checkedBorder; }
+QToolButton:checked:pressed { background: @checkedHoverFill; border-color: @checkedBorder; }
 
 /* --- Text fields, spin boxes, combo boxes ----------------------------------- */
 
@@ -189,18 +193,17 @@ QTabBar::tab {
 }
 QTabBar::tab:hover:!selected { background: @tabHoverFill; color: @text; }
 
-/* The selected tab: the pane's colour, joined to the pane, accent line on top */
+/* The selected tab: the pane's colour, with a blue line under it */
 QTabBar::tab:selected {
     background: @tabSelectedFill;
     color: @text;
     border-color: @border;
-    border-top: 2px solid @accent;
-    border-bottom-color: @window;
+    border-bottom: 3px solid @accent;
     margin-top: 0;
-    padding-bottom: 7px;          /* covers the pane's top border */
+    padding-bottom: 5px;          /* the same height as the others despite the line */
 }
 QTabBar::tab:disabled { color: @textDisabled; }
-QTabBar::tab:selected:disabled { border-top-color: @border; }
+QTabBar::tab:selected:disabled { border-bottom-color: @border; }
 
 /* Tabs along the bottom, left or right of a QTabWidget: mirror the above */
 QTabBar::tab:bottom {
@@ -209,25 +212,34 @@ QTabBar::tab:bottom {
     margin-top: 0; margin-bottom: 3px;
 }
 QTabBar::tab:bottom:selected {
-    border-top: 1px solid @window; border-bottom: 2px solid @accent;
-    margin-bottom: 0; padding-bottom: 6px; padding-top: 7px;
+    border-top: 1px solid @border; border-bottom: 3px solid @accent;
+    margin-bottom: 0; padding-bottom: 4px; padding-top: 6px;
 }
 
 /* --- Group boxes ------------------------------------------------------------ */
 
+/* The title is a darker, rounded tab sitting on a thick grey line: the
+   group box's top border */
 QGroupBox {
     border: 1px solid @border;
+    border-top: 3px solid @groupLine;
     border-radius: 8px;
-    margin-top: 14px;
+    border-top-left-radius: 3px;  /* the line runs nearly square into the sides */
+    border-top-right-radius: 3px;
+    margin-top: 22px;             /* the title tab's height: it sits on the line */
     padding: 10px 8px 8px 8px;
 }
 QGroupBox::title {
     subcontrol-origin: margin;
     subcontrol-position: top left;
-    left: 10px;
-    padding: 0 4px;
-    color: @textSecondary;
+    left: 8px;
+    padding: 4px 12px;
+    background-color: @groupTitle;
+    color: @text;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
 }
+QGroupBox::title:disabled { color: @textDisabled; }
 
 /* --- Scroll bars: slim and rounded, no arrow buttons ------------------------------- */
 
@@ -308,7 +320,13 @@ QMenu::item:selected { background-color: @selection; }
 QMenu::item:disabled { color: @textDisabled; }
 QMenu::separator { height: 1px; background-color: palette(alternate-base); margin: 4px 8px; }
 
-QToolBar { background: transparent; border: none; spacing: 4px; padding: 2px; }
+/* Toolbars: a see-through band, darker towards the window's edge, with a
+   3 px edge on the side facing the window's contents */
+QToolBar { border: none; spacing: 4px; padding: 2px; }
+QToolBar:top    { background: @toolbarTopFill;    border-bottom: 3px solid @toolbarTopFill; }
+QToolBar:bottom { background: @toolbarBottomFill; border-top: 3px solid @toolbarBottomFill; }
+QToolBar:left   { background: @toolbarLeftFill;   border-right: 3px solid @toolbarLeftFill; }
+QToolBar:right  { background: @toolbarRightFill;  border-left: 3px solid @toolbarRightFill; }
 QToolBar::separator { background-color: palette(alternate-base); width: 1px; margin: 4px 6px; }
 
 /* --- Dock widgets: panels like Slate's cards ------------------------------------ */
@@ -352,16 +370,12 @@ QSplitter::handle, QMainWindow::separator {
 }
 QSplitter::handle:hover, QMainWindow::separator:hover,
 QSplitter::handle:pressed, QMainWindow::separator:pressed {
-    background-color: @accent;
+    background-color: palette(highlight);
 }
-QSplitter::handle:horizontal, QMainWindow::separator:vertical {
-    width: 7px;
-    image: url(@icons/grip-vertical.png);
-}
-QSplitter::handle:vertical, QMainWindow::separator:horizontal {
-    height: 7px;
-    image: url(@icons/grip-horizontal.png);
-}
+QSplitter::handle:horizontal { width: 10px; image: url(@icons/grip-vertical.png); }
+QSplitter::handle:vertical   { height: 10px; image: url(@icons/grip-horizontal.png); }
+QMainWindow::separator:vertical   { width: 6px; image: url(@icons/grip-vertical.png); }
+QMainWindow::separator:horizontal { height: 6px; image: url(@icons/grip-horizontal.png); }
 
 QStatusBar { background: transparent; color: @textSecondary; }
 QStatusBar::item { border: none; }

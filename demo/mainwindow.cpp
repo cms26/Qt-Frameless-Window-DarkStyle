@@ -56,6 +56,11 @@ MainWindow::MainWindow(ModernStyle *style, QWidget *parent)
     splitter->addWidget(ui->textEdit);
     splitter->setSizes({ 160, 400 });
 
+    // A toggle button, checked: shows the checked look
+    ui->pushButton_2->setCheckable(true);
+    ui->pushButton_2->setChecked(true);
+    ui->pushButton_2->setText(tr("Toggle (checked)"));
+
     // Theme switcher in the toolbar, filled from the style's theme names
     if (style) {
         auto *themes = new QComboBox(this);

@@ -19,12 +19,15 @@ Version 2 of this fork brings the original [Qt-Frameless-Window-DarkStyle](https
 - Takes its title and icon from the content (e.g. your `QMainWindow`) and follows later title changes.
 
 **ModernStyle**
-- **The dark theme matches [Bootswatch Slate](https://bootswatch.com/slate/)**, so a Qt app and a Bootstrap web front end using Slate look alike: the same background (`#272b30`), panels, near-black borders, grey text, and Slate's gradient buttons and tabs (raised, sunken on hover, darker when pressed). The values come from Slate's own Sass (`_variables.scss`, `_bootswatch.scss`) and were checked pixel by pixel against Slate rendered in a browser. The light theme is ModernStyle's own.
+- **The dark theme matches [Bootswatch Slate](https://bootswatch.com/slate/)**, so a Qt app and a Bootstrap web front end using Slate look alike: the same background (`#272b30`), panels, near-black borders, grey text, and Slate's gradient buttons and tabs (raised, sunken on hover, darker when pressed). The values come from Slate's own Sass (`_variables.scss`, `_bootswatch.scss`) and were checked pixel by pixel against Slate rendered in a browser. **The light theme follows [Bootswatch Spacelab](https://bootswatch.com/spacelab/)**, Slate's light sibling: the same gradient buttons in light greys, a `#f8f9fa` background and white panels.
 - Light and dark themes, flat and rounded, with one accent colour for selections, default buttons, focus, sliders, progress bars, check boxes and radio buttons.
 - `Theme::System` (default) follows the OS light/dark setting and **switches live when it changes** (Qt 6.5+; older Qt picks at start-up).
 - Switch at run time with `setTheme()`, change the accent with `setAccentColor()`.
 - Themes by name, e.g. for a settings dialog or a command-line option: `getThemeNames()` gives `"System", "Light", "Dark"`, `ModernStyle::themeFromName("dark")` the theme (any case; `Theme::Invalid` for an unknown name), `ModernStyle::themeName(theme)` the name back.
-- Splitter handles and the gaps between dock widgets have grip dots and turn the accent colour under the mouse; slider tracks and scroll bar handles are drawn in a colour that stands out on both the window and panels.
+- Checked buttons and tool buttons are blue (a `#428bca` gradient) and turn darker under the mouse; unchecked tool buttons light up under the mouse.
+- The selected tab has a blue line under it. Group box titles are darker, rounded tabs sitting on a thick grey line.
+- Toolbars are a see-through band, darker towards the window edge, with a 3 px edge towards the contents (top, bottom, left and right toolbars).
+- Splitter handles (10 px) and the gaps between dock widgets (6 px) have grip dots and turn `palette(highlight)` under the mouse; slider tracks and scroll bar handles are drawn in a colour that stands out on both the window and panels.
 - Based on Qt's Fusion style, plus one readable style sheet (`modernstyle/modernstyle.qss`) with named colours (`@accent`, `@border`, ...) you can edit.
 - Check boxes, radio buttons and arrows are drawn in the theme's colours at 1× and 2×: no image files, no Qt SVG module needed.
 - **Dock widgets are panels like Slate's cards**: a lighter body (`$card-bg`, `#32383e`) and a header-coloured title bar (`$card-cap-bg`, `#515960`) with rounded top corners and clear close / float buttons. Splitter handles, the gaps between dock widgets and the menu and toolbar separators use `palette(alternate-base)`.

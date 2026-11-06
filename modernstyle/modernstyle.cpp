@@ -27,7 +27,9 @@ namespace {
 // The dark theme follows Bootswatch's "Slate" theme for Bootstrap
 // (https://bootswatch.com/slate/, dist/slate/_variables.scss), so a Qt app
 // and a web front end using Slate look alike. Slate's names and Sass
-// expressions are noted next to each colour.
+// expressions are noted next to each colour. The light theme follows Slate's
+// light sibling "Spacelab" (https://bootswatch.com/spacelab/): the same
+// gradient buttons, in light greys.
 QHash<QString, QColor> themeColors(bool dark, const QColor &accent)
 {
     QHash<QString, QColor> c;
@@ -52,27 +54,32 @@ QHash<QString, QColor> themeColors(bool dark, const QColor &accent)
         c["tabHover"] = QColor("#3e444c");
         c["panel"] = QColor("#32383e");           // dock widgets: $card-bg, lighten($body-bg, 5%)
         c["panelHeader"] = QColor("#515960");     // their title bar: $card-cap-bg, lighten($gray-800, 10%)
+        c["groupTitle"] = QColor("#1c1e22");      // group box title tab: darken($gray-900, 5%)
+        c["groupLine"] = QColor("#52575c");       // the thick line under it: $gray-700
     } else {
-        c["window"] = QColor("#f3f3f3");
-        c["surface"] = QColor("#ffffff");
-        c["surfaceAlt"] = QColor("#f7f7f7");
-        c["control"] = QColor("#fbfbfb");
-        c["controlHover"] = QColor("#f0f0f0");
-        c["controlPressed"] = QColor("#e6e6e6");
-        c["border"] = QColor("#d6d6d6");
-        c["borderStrong"] = QColor("#b3b3b3");
-        c["groove"] = QColor("#bdbdbd");
-        c["grooveHover"] = QColor("#8f8f8f");
-        c["grip"] = QColor("#8f8f8f");
-        c["text"] = QColor("#1c1c1c");
-        c["textSecondary"] = QColor("#5c5c5c");
-        c["textDisabled"] = QColor("#a3a3a3");
+        // Spacelab
+        c["window"] = QColor("#f8f9fa");          // $gray-100 (.bg-light)
+        c["surface"] = QColor("#ffffff");         // $body-bg, $card-bg
+        c["surfaceAlt"] = QColor("#f2f2f2");      // table stripes: rgba($black, .05) over white
+        c["control"] = QColor("#eeeeee");         // $gray-200 (.btn-light)
+        c["controlHover"] = QColor("#dbdbdb");    // shade-color($gray-200, 8%)
+        c["controlPressed"] = QColor("#c9c9c9");
+        c["border"] = QColor("#dee2e6");          // $gray-300 ($border-color)
+        c["borderStrong"] = QColor("#bebebe");    // .btn-light's border: shade-color($gray-200, 20%)
+        c["groove"] = QColor("#b5b5b5");
+        c["grooveHover"] = QColor("#777777");     // $gray-600
+        c["grip"] = QColor("#777777");
+        c["text"] = QColor("#2d2d2d");            // $headings-color ($gray-900)
+        c["textSecondary"] = QColor("#666666");   // near $body-color ($gray-600, #777), a little darker to read well
+        c["textDisabled"] = QColor("#999999");    // $gray-500
         c["menu"] = QColor("#ffffff");
         c["tooltip"] = QColor("#ffffff");
-        c["tab"] = QColor("#e7e7e7");
-        c["tabHover"] = QColor("#dedede");
-        c["panel"] = QColor("#ffffff");
-        c["panelHeader"] = QColor("#e8e8e8");
+        c["tab"] = QColor("#eeeeee");
+        c["tabHover"] = QColor("#dbdbdb");
+        c["panel"] = QColor("#ffffff");           // $card-bg
+        c["panelHeader"] = QColor("#eeeeee");     // $gray-200 (.navbar.bg-light)
+        c["groupTitle"] = QColor("#dee2e6");      // $gray-300
+        c["groupLine"] = QColor("#adb5bd");
     }
     // The accent, a little lighter on dark backgrounds so it stands out
     c["accent"] = dark ? accent.lighter(115) : accent;
@@ -118,32 +125,52 @@ QHash<QString, QString> themeFills(bool dark, const QHash<QString, QColor> &c)
         f["tabSelectedFill"] = raised;
         // Tool buttons (toolbars) are flat until the mouse is over them; then
         // they light up: Slate's raised button, a step brighter (tint 12%
-        // instead of 5% at the top). Checked: pressed in (btn-shadow-inverse-
-        // dark), lighting up the same way when the mouse is over them.
+        // instead of 5% at the top).
         f["toolHoverFill"] = verticalGradient("#53575c", "#474c50", 0.2, "#3a3f44");
-        f["toolCheckedFill"] = verticalGradient("#25282c", "#292c30", 0.4, "#2b2f32");
-        f["toolCheckedHoverFill"] = f["toolHoverFill"];
+        // Checked buttons and tool buttons: blue; darker (pressed in) when
+        // the mouse is over them
+        f["checkedFill"] = verticalGradient("#5a9ad1", "#428bca", 0.6, "#3681c1");
+        f["checkedHoverFill"] = verticalGradient("#204c72", "#275c8a", 0.4, "#296192");
+        f["checkedBorder"] = f["buttonBorder"];
+        // Toolbars: a dark, see-through band with a 3 px edge towards the
+        // window (top: edge at the bottom, left: edge on the right, ...)
+        f["toolbarDarkEnd"] = QStringLiteral("rgba(25, 25, 25, 127)");
+        f["toolbarLightEnd"] = QStringLiteral("rgba(53, 53, 53, 75)");
     } else {
-        f["buttonFill"] = c["control"].name();
-        f["buttonHoverFill"] = c["controlHover"].name();
-        f["buttonPressedFill"] = c["controlPressed"].name();
-        f["buttonBorder"] = c["border"].name();
-        f["buttonHoverBorder"] = c["borderStrong"].name();
-        f["buttonText"] = c["text"].name();
-        f["tabFill"] = c["tab"].name();
-        f["tabHoverFill"] = c["tabHover"].name();
+        // Spacelab's btn-shadow(): tint 24% -> the colour at 50% -> shade 8%,
+        // border shade 20%. Buttons are .btn-light ($gray-200); hovered,
+        // btn-shadow(shade-color($gray-200, 8%)) as in Spacelab.
+        f["buttonFill"] = verticalGradient("#f2f2f2", "#eeeeee", 0.5, "#dbdbdb");
+        f["buttonHoverFill"] = verticalGradient("#e4e4e4", "#dbdbdb", 0.5, "#c9c9c9");
+        f["buttonPressedFill"] = verticalGradient("#c4c4c4", "#cdcdcd", 0.4, "#d4d4d4");
+        f["buttonBorder"] = c["borderStrong"].name();
+        f["buttonHoverBorder"] = QStringLiteral("#afafaf");
+        f["buttonText"] = QStringLiteral("#333333");          // $gray-800
+        f["tabFill"] = f["buttonFill"];
+        f["tabHoverFill"] = f["buttonHoverFill"];
         f["tabSelectedFill"] = c["window"].name();
-        f["toolHoverFill"] = c["controlHover"].name();
-        QColor checked = c["accent"], checkedHover = c["accent"];
-        checked.setAlpha(45);
-        checkedHover.setAlpha(80);     // lights up: a stronger tint of the accent
-        auto rgba = [](const QColor &color) {
-            return QStringLiteral("rgba(%1, %2, %3, %4)")
-                .arg(color.red()).arg(color.green()).arg(color.blue()).arg(color.alpha());
-        };
-        f["toolCheckedFill"] = rgba(checked);
-        f["toolCheckedHoverFill"] = rgba(checkedHover);
+        f["toolHoverFill"] = f["buttonFill"];
+        // Checked: btn-shadow() of the same blue as the dark theme (#428bca),
+        // darker when hovered (btn-shadow(shade-color(#428bca, 8%)))
+        f["checkedFill"] = verticalGradient("#6fa7d7", "#428bca", 0.5, "#3d80ba");
+        f["checkedHoverFill"] = verticalGradient("#6c9eca", "#3d80ba", 0.5, "#3876ab");
+        f["checkedBorder"] = QStringLiteral("#356fa2");       // shade-color(#428bca, 20%)
+        // Toolbars: a light band, see-through like the dark one
+        f["toolbarDarkEnd"] = QStringLiteral("rgba(206, 212, 218, 150)");
+        f["toolbarLightEnd"] = QStringLiteral("rgba(255, 255, 255, 120)");
     }
+    f["checkedText"] = QStringLiteral("#ffffff");
+    // The toolbar gradients, one per side, from the two ends above: the
+    // darker end is towards the window's edge
+    const QString dark0 = f["toolbarDarkEnd"], light0 = f["toolbarLightEnd"];
+    auto band = [&](const char *coords) {
+        return QStringLiteral("qlineargradient(%1, stop:0 %2, stop:1 %3)")
+            .arg(QLatin1String(coords), dark0, light0);
+    };
+    f["toolbarTopFill"] = band("x1:0, y1:0, x2:0, y2:1");
+    f["toolbarBottomFill"] = band("x1:0, y1:1, x2:0, y2:0");
+    f["toolbarLeftFill"] = band("x1:0, y1:0, x2:1, y2:0");
+    f["toolbarRightFill"] = band("x1:1, y1:0, x2:0, y2:0");
     return f;
 }
 
