@@ -15,6 +15,7 @@
 #include <QtMath>
 #endif
 
+#include <QActionGroup>
 #include <QCheckBox>
 #include <QComboBox>
 #include <QDockWidget>
@@ -22,9 +23,12 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QListWidget>
+#include <QMenu>
+#include <QMenuBar>
 #include <QPlainTextEdit>
 #include <QSpinBox>
 #include <QSplitter>
+#include <QStatusBar>
 #include <QTreeWidget>
 #include <QToolBar>
 
@@ -56,6 +60,30 @@ MainWindow::MainWindow(ModernStyle *style, QWidget *parent)
     splitter->addWidget(ui->textEdit);
     splitter->setSizes({ 160, 400 });
 
+    // A menu with checkable items (check boxes and radio buttons), a
+    // disabled item, and a status bar message
+    QMenu *view = menuBar()->addMenu(tr("View"));
+    QAction *grid = view->addAction(tr("Show grid"));
+    grid->setCheckable(true);
+    grid->setChecked(true);
+    view->addAction(tr("Show legend"))->setCheckable(true);
+    view->addSeparator();
+    auto *zoom = new QActionGroup(view);
+    for (const QString &level : { tr("Fit"), tr("100 %"), tr("200 %") }) {
+        QAction *a = view->addAction(level);
+        a->setCheckable(true);
+        zoom->addAction(a);
+    }
+    zoom->actions().first()->setChecked(true);
+    view->addSeparator();
+    view->addAction(tr("Not available"))->setEnabled(false);
+    statusBar()->showMessage(tr("Ready"));
+
+    // A toggle button, checked: shows the checked look
+    ui->pushButton_2->setCheckable(true);
+    ui->pushButton_2->setChecked(true);
+    ui->pushButton_2->setText(tr("Toggle (checked)"));
+
     // Theme switcher in the toolbar, filled from the style's theme names
     if (style) {
         auto *themes = new QComboBox(this);
@@ -84,6 +112,7 @@ MainWindow::MainWindow(ModernStyle *style, QWidget *parent)
     auto *propertiesDock = new QDockWidget(tr("Properties"), this);
     propertiesDock->setObjectName(QStringLiteral("propertiesDock"));
     propertiesDock->setWidget(properties);
+    propertiesDock->setWindowIcon(QWidget::style()->standardIcon(QStyle::SP_FileDialogDetailedView));
     addDockWidget(Qt::RightDockWidgetArea, propertiesDock);
 
     auto *layers = new QListWidget;
@@ -91,6 +120,7 @@ MainWindow::MainWindow(ModernStyle *style, QWidget *parent)
     auto *layersDock = new QDockWidget(tr("Layers"), this);
     layersDock->setObjectName(QStringLiteral("layersDock"));
     layersDock->setWidget(layers);
+    layersDock->setWindowIcon(QWidget::style()->standardIcon(QStyle::SP_DirIcon));
     addDockWidget(Qt::RightDockWidgetArea, layersDock);
     tabifyDockWidget(propertiesDock, layersDock);
     propertiesDock->raise();
@@ -101,6 +131,7 @@ MainWindow::MainWindow(ModernStyle *style, QWidget *parent)
     auto *logDock = new QDockWidget(tr("Log"), this);
     logDock->setObjectName(QStringLiteral("logDock"));
     logDock->setWidget(log);
+    logDock->setWindowIcon(QWidget::style()->standardIcon(QStyle::SP_MessageBoxInformation));
     addDockWidget(Qt::RightDockWidgetArea, logDock);
 
 #ifdef DEMO_WITH_QWT

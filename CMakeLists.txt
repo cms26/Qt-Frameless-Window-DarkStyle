@@ -34,6 +34,8 @@ add_library(FramelessWindow STATIC
     framelesswindow/titlebar.cpp
     modernstyle/modernstyle.h
     modernstyle/modernstyle.cpp
+    modernstyle/docktitlebar.h
+    modernstyle/docktitlebar.cpp
     modernstyle/DarkStyle.h
 )
 add_library(FramelessWindow::FramelessWindow ALIAS FramelessWindow)

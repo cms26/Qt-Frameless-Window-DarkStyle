@@ -3,6 +3,8 @@
 
 #include "modernstyle.h"
 
+#include "docktitlebar.h"
+
 #include <QApplication>
 #include <QDir>
 #include <QFile>
@@ -10,6 +12,11 @@
 #include <QPainterPath>
 #include <QAbstractItemView>
 #include <QComboBox>
+#include <QDockWidget>
+#include <QMainWindow>
+#include <QPointer>
+#include <QTabBar>
+#include <QTimer>
 #include <QMenu>
 #include <QMetaEnum>
 #include <QStyleFactory>
@@ -27,7 +34,9 @@ namespace {
 // The dark theme follows Bootswatch's "Slate" theme for Bootstrap
 // (https://bootswatch.com/slate/, dist/slate/_variables.scss), so a Qt app
 // and a web front end using Slate look alike. Slate's names and Sass
-// expressions are noted next to each colour.
+// expressions are noted next to each colour. The light theme follows Slate's
+// light sibling "Spacelab" (https://bootswatch.com/spacelab/): the same
+// gradient buttons, in light greys.
 QHash<QString, QColor> themeColors(bool dark, const QColor &accent)
 {
     QHash<QString, QColor> c;
@@ -52,27 +61,32 @@ QHash<QString, QColor> themeColors(bool dark, const QColor &accent)
         c["tabHover"] = QColor("#3e444c");
         c["panel"] = QColor("#32383e");           // dock widgets: $card-bg, lighten($body-bg, 5%)
         c["panelHeader"] = QColor("#515960");     // their title bar: $card-cap-bg, lighten($gray-800, 10%)
+        c["groupTitle"] = QColor("#1c1e22");      // group box title tab: darken($gray-900, 5%)
+        c["groupLine"] = QColor("#52575c");       // the thick line under it: $gray-700
     } else {
-        c["window"] = QColor("#f3f3f3");
-        c["surface"] = QColor("#ffffff");
-        c["surfaceAlt"] = QColor("#f7f7f7");
-        c["control"] = QColor("#fbfbfb");
-        c["controlHover"] = QColor("#f0f0f0");
-        c["controlPressed"] = QColor("#e6e6e6");
-        c["border"] = QColor("#d6d6d6");
-        c["borderStrong"] = QColor("#b3b3b3");
-        c["groove"] = QColor("#bdbdbd");
-        c["grooveHover"] = QColor("#8f8f8f");
-        c["grip"] = QColor("#8f8f8f");
-        c["text"] = QColor("#1c1c1c");
-        c["textSecondary"] = QColor("#5c5c5c");
-        c["textDisabled"] = QColor("#a3a3a3");
+        // Spacelab
+        c["window"] = QColor("#f8f9fa");          // $gray-100 (.bg-light)
+        c["surface"] = QColor("#ffffff");         // $body-bg, $card-bg
+        c["surfaceAlt"] = QColor("#f2f2f2");      // table stripes: rgba($black, .05) over white
+        c["control"] = QColor("#eeeeee");         // $gray-200 (.btn-light)
+        c["controlHover"] = QColor("#dbdbdb");    // shade-color($gray-200, 8%)
+        c["controlPressed"] = QColor("#c9c9c9");
+        c["border"] = QColor("#dee2e6");          // $gray-300 ($border-color)
+        c["borderStrong"] = QColor("#bebebe");    // .btn-light's border: shade-color($gray-200, 20%)
+        c["groove"] = QColor("#b5b5b5");
+        c["grooveHover"] = QColor("#777777");     // $gray-600
+        c["grip"] = QColor("#777777");
+        c["text"] = QColor("#2d2d2d");            // $headings-color ($gray-900)
+        c["textSecondary"] = QColor("#666666");   // near $body-color ($gray-600, #777), a little darker to read well
+        c["textDisabled"] = QColor("#999999");    // $gray-500
         c["menu"] = QColor("#ffffff");
         c["tooltip"] = QColor("#ffffff");
-        c["tab"] = QColor("#e7e7e7");
-        c["tabHover"] = QColor("#dedede");
-        c["panel"] = QColor("#ffffff");
-        c["panelHeader"] = QColor("#e8e8e8");
+        c["tab"] = QColor("#eeeeee");
+        c["tabHover"] = QColor("#dbdbdb");
+        c["panel"] = QColor("#ffffff");           // $card-bg
+        c["panelHeader"] = QColor("#eeeeee");     // $gray-200 (.navbar.bg-light)
+        c["groupTitle"] = QColor("#dee2e6");      // $gray-300
+        c["groupLine"] = QColor("#adb5bd");
     }
     // The accent, a little lighter on dark backgrounds so it stands out
     c["accent"] = dark ? accent.lighter(115) : accent;
@@ -118,32 +132,64 @@ QHash<QString, QString> themeFills(bool dark, const QHash<QString, QColor> &c)
         f["tabSelectedFill"] = raised;
         // Tool buttons (toolbars) are flat until the mouse is over them; then
         // they light up: Slate's raised button, a step brighter (tint 12%
-        // instead of 5% at the top). Checked: pressed in (btn-shadow-inverse-
-        // dark), lighting up the same way when the mouse is over them.
+        // instead of 5% at the top).
         f["toolHoverFill"] = verticalGradient("#53575c", "#474c50", 0.2, "#3a3f44");
-        f["toolCheckedFill"] = verticalGradient("#25282c", "#292c30", 0.4, "#2b2f32");
-        f["toolCheckedHoverFill"] = f["toolHoverFill"];
+        // Checked buttons and tool buttons: blue; darker (pressed in) when
+        // the mouse is over them
+        f["checkedFill"] = verticalGradient("#5a9ad1", "#428bca", 0.6, "#3681c1");
+        f["checkedHoverFill"] = verticalGradient("#204c72", "#275c8a", 0.4, "#296192");
+        f["checkedBorder"] = f["buttonBorder"];
+        // Toolbars: a dark, see-through band with a 3 px edge towards the
+        // window (top: edge at the bottom, left: edge on the right, ...)
+        f["toolbarDarkEnd"] = QStringLiteral("rgba(25, 25, 25, 127)");
+        f["toolbarLightEnd"] = QStringLiteral("rgba(53, 53, 53, 75)");
+        f["barEdge"] = QStringLiteral("rgba(25, 25, 25, 75)");          // menu bar's bottom edge
+        // Group boxes and tab pages: a lighter, see-through area
+        f["boxFill"] = QStringLiteral("rgba(66, 66, 66, 128)");
+        // Menu bar item under the mouse: a grey glow fading downwards
+        f["menuBarItemHoverFill"] = QStringLiteral(
+            "qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 rgba(106, 106, 106, 255), stop:1 rgba(106, 106, 106, 75))");
+        f["menuBarItemEdge"] = QStringLiteral("rgba(106, 106, 106, 127)");
     } else {
-        f["buttonFill"] = c["control"].name();
-        f["buttonHoverFill"] = c["controlHover"].name();
-        f["buttonPressedFill"] = c["controlPressed"].name();
-        f["buttonBorder"] = c["border"].name();
-        f["buttonHoverBorder"] = c["borderStrong"].name();
-        f["buttonText"] = c["text"].name();
-        f["tabFill"] = c["tab"].name();
-        f["tabHoverFill"] = c["tabHover"].name();
+        // Spacelab's btn-shadow(): tint 24% -> the colour at 50% -> shade 8%,
+        // border shade 20%. Buttons are .btn-light ($gray-200); hovered,
+        // btn-shadow(shade-color($gray-200, 8%)) as in Spacelab.
+        f["buttonFill"] = verticalGradient("#f2f2f2", "#eeeeee", 0.5, "#dbdbdb");
+        f["buttonHoverFill"] = verticalGradient("#e4e4e4", "#dbdbdb", 0.5, "#c9c9c9");
+        f["buttonPressedFill"] = verticalGradient("#c4c4c4", "#cdcdcd", 0.4, "#d4d4d4");
+        f["buttonBorder"] = c["borderStrong"].name();
+        f["buttonHoverBorder"] = QStringLiteral("#afafaf");
+        f["buttonText"] = QStringLiteral("#333333");          // $gray-800
+        f["tabFill"] = f["buttonFill"];
+        f["tabHoverFill"] = f["buttonHoverFill"];
         f["tabSelectedFill"] = c["window"].name();
-        f["toolHoverFill"] = c["controlHover"].name();
-        QColor checked = c["accent"], checkedHover = c["accent"];
-        checked.setAlpha(45);
-        checkedHover.setAlpha(80);     // lights up: a stronger tint of the accent
-        auto rgba = [](const QColor &color) {
-            return QStringLiteral("rgba(%1, %2, %3, %4)")
-                .arg(color.red()).arg(color.green()).arg(color.blue()).arg(color.alpha());
-        };
-        f["toolCheckedFill"] = rgba(checked);
-        f["toolCheckedHoverFill"] = rgba(checkedHover);
+        f["toolHoverFill"] = f["buttonFill"];
+        // Checked: btn-shadow() of the same blue as the dark theme (#428bca),
+        // darker when hovered (btn-shadow(shade-color(#428bca, 8%)))
+        f["checkedFill"] = verticalGradient("#6fa7d7", "#428bca", 0.5, "#3d80ba");
+        f["checkedHoverFill"] = verticalGradient("#6c9eca", "#3d80ba", 0.5, "#3876ab");
+        f["checkedBorder"] = QStringLiteral("#356fa2");       // shade-color(#428bca, 20%)
+        // Toolbars: a light band, see-through like the dark one
+        f["toolbarDarkEnd"] = QStringLiteral("rgba(206, 212, 218, 150)");
+        f["toolbarLightEnd"] = QStringLiteral("rgba(255, 255, 255, 120)");
+        f["barEdge"] = QStringLiteral("rgba(173, 181, 189, 110)");
+        f["boxFill"] = QStringLiteral("rgba(255, 255, 255, 200)");
+        f["menuBarItemHoverFill"] = QStringLiteral(
+            "qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 rgba(173, 181, 189, 200), stop:1 rgba(173, 181, 189, 60))");
+        f["menuBarItemEdge"] = QStringLiteral("rgba(173, 181, 189, 160)");
     }
+    f["checkedText"] = QStringLiteral("#ffffff");
+    // The toolbar gradients, one per side, from the two ends above: the
+    // darker end is towards the window's edge
+    const QString dark0 = f["toolbarDarkEnd"], light0 = f["toolbarLightEnd"];
+    auto band = [&](const char *coords) {
+        return QStringLiteral("qlineargradient(%1, stop:0 %2, stop:1 %3)")
+            .arg(QLatin1String(coords), dark0, light0);
+    };
+    f["toolbarTopFill"] = band("x1:0, y1:0, x2:0, y2:1");
+    f["toolbarBottomFill"] = band("x1:0, y1:1, x2:0, y2:0");
+    f["toolbarLeftFill"] = band("x1:0, y1:0, x2:1, y2:0");
+    f["toolbarRightFill"] = band("x1:1, y1:0, x2:0, y2:0");
     return f;
 }
 
@@ -207,6 +253,34 @@ Painter dockFloat(const QColor &color)
         p.setBrush(Qt::NoBrush);
         p.drawRoundedRect(QRectF(4.5, 1.5, 6, 6), 1, 1);           // back
         p.drawRoundedRect(QRectF(1.5, 4.5, 6, 6), 1, 1);           // front
+    };
+}
+
+// A chevron pointing right (closed tree branch), 10 x 10
+Painter chevronRight(const QColor &color)
+{
+    return [=](QPainter &p) {
+        QPen pen(color, 1.4);
+        pen.setCapStyle(Qt::RoundCap);
+        pen.setJoinStyle(Qt::RoundJoin);
+        p.setPen(pen);
+        const QPointF points[] = { { 3.5, 2.0 }, { 6.5, 5.0 }, { 3.5, 8.0 } };
+        p.drawPolyline(points, 3);
+    };
+}
+
+// Tree branch lines, 20 x 20 (stretched to the row by border-image): a line
+// down the middle; "more": plus a line to the item; "end": the top half
+// down to the item, then to it
+enum class Branch { Line, More, End };
+Painter branchLines(const QColor &color, Branch kind)
+{
+    return [=](QPainter &p) {
+        p.setRenderHint(QPainter::Antialiasing, false);
+        p.setPen(QPen(color, 1));
+        p.drawLine(QPointF(9, 0), QPointF(9, kind == Branch::End ? 10 : 20));
+        if (kind != Branch::Line)
+            p.drawLine(QPointF(9, 10), QPointF(19, 10));
     };
 }
 
@@ -400,6 +474,54 @@ void ModernStyle::polish(QApplication *app)
         apply();
 }
 
+namespace {
+
+// The tab bars QMainWindow makes for tabbed dock widgets: a QTabBar whose
+// parent is the main window itself
+bool isDockTabBar(const QWidget *widget)
+{
+    return qobject_cast<const QTabBar *>(widget) && qobject_cast<QMainWindow *>(widget->parentWidget());
+}
+
+// Put each dock widget's icon on its tab. QMainWindow stores the dock
+// widget's address as the tab's data; it is only compared with the main
+// window's dock widgets, never used as a pointer on its own.
+void syncDockTabIcons(QTabBar *tabs)
+{
+    auto *mainWindow = qobject_cast<QMainWindow *>(tabs->parentWidget());
+    if (!mainWindow)
+        return;
+    const QList<QDockWidget *> docks = mainWindow->findChildren<QDockWidget *>();
+    for (int i = 0; i < tabs->count(); ++i) {
+        const quintptr id = tabs->tabData(i).value<quintptr>();
+        for (QDockWidget *dock : docks) {
+            if (reinterpret_cast<quintptr>(dock) != id)
+                continue;
+            const QIcon icon = dock->testAttribute(Qt::WA_SetWindowIcon) ? dock->windowIcon() : QIcon();
+            if (tabs->tabIcon(i).cacheKey() != icon.cacheKey())
+                tabs->setTabIcon(i, icon);
+            break;
+        }
+    }
+}
+
+// Again after the current event: QMainWindow rebuilds its tab bars when dock
+// widgets are tabbed, moved or floated, and icons may change at any time
+void syncDockTabIconsLater(QTabBar *tabs)
+{
+    if (tabs->property("_modernIconSyncPending").toBool())
+        return;
+    tabs->setProperty("_modernIconSyncPending", true);
+    QTimer::singleShot(0, tabs, [tabs = QPointer<QTabBar>(tabs)] {
+        if (!tabs)
+            return;
+        tabs->setProperty("_modernIconSyncPending", false);
+        syncDockTabIcons(tabs);
+    });
+}
+
+} // namespace
+
 void ModernStyle::polish(QWidget *widget)
 {
     QProxyStyle::polish(widget);
@@ -413,17 +535,49 @@ void ModernStyle::polish(QWidget *widget)
     // maximum height (eventFilter())
     if (auto *combo = qobject_cast<QComboBox *>(widget))
         combo->view()->window()->installEventFilter(this);
+
+    // Dock widgets: the title bar with icon (DockTitleBar), and watch for
+    // icon changes, which their tabs must show
+    if (auto *dock = qobject_cast<QDockWidget *>(widget)) {
+        if (m_dockTitleBars)
+            DockTitleBar::install(dock);
+        dock->installEventFilter(this);
+    }
+    // Tabbed dock widgets: icons on the tabs
+    if (isDockTabBar(widget)) {
+        widget->installEventFilter(this);
+        syncDockTabIconsLater(static_cast<QTabBar *>(widget));
+    }
 }
 
 void ModernStyle::unpolish(QWidget *widget)
 {
     if (auto *combo = qobject_cast<QComboBox *>(widget))
         combo->view()->window()->removeEventFilter(this);
+    if (qobject_cast<QDockWidget *>(widget) || isDockTabBar(widget))
+        widget->removeEventFilter(this);
     QProxyStyle::unpolish(widget);
 }
 
 bool ModernStyle::eventFilter(QObject *watched, QEvent *event)
 {
+    // Dock widget tabs: QMainWindow refills them (titles) without icons; put
+    // the icons back before they're painted. Cheap when nothing changed.
+    if (event->type() == QEvent::Paint || event->type() == QEvent::Show) {
+        auto *tabs = qobject_cast<QTabBar *>(watched);
+        if (tabs && isDockTabBar(tabs))
+            syncDockTabIconsLater(tabs);
+    }
+    // A dock widget's icon changed: its tab must show the new one
+    if (event->type() == QEvent::WindowIconChange) {
+        if (auto *dock = qobject_cast<QDockWidget *>(watched)) {
+            if (auto *mainWindow = qobject_cast<QMainWindow *>(dock->parentWidget())) {
+                for (QTabBar *tabs : mainWindow->findChildren<QTabBar *>(QString(), Qt::FindDirectChildrenOnly))
+                    syncDockTabIconsLater(tabs);
+            }
+        }
+    }
+
     // A combo box's drop-down list is being shown: QComboBox has sized it for
     // its items; make it no taller than the maximum height (the combo box's
     // own "popupMaxHeight" property, else comboPopupMaxHeight()). The list
@@ -521,6 +675,20 @@ QString ModernStyle::writeImages() const
     save("radio-checked-hover", indicator, radioButton({}, c["accentHover"], true, c["accentText"]));
     save("radio-disabled", indicator, radioButton(c["border"], c["window"], false, {}));
     save("radio-checked-disabled", indicator, radioButton({}, c["border"], true, c["textDisabled"]));
+    // Pressed (mouse held down): accent edge, or the darker accent when checked
+    save("checkbox-pressed", indicator, checkBox(c["accent"], c["surface"], Mark::None, {}));
+    save("checkbox-checked-pressed", indicator, checkBox({}, c["accentPressed"], Mark::Check, c["accentText"]));
+    save("checkbox-indeterminate-pressed", indicator, checkBox({}, c["accentPressed"], Mark::Dash, c["accentText"]));
+    save("radio-pressed", indicator, radioButton(c["accent"], c["surface"], false, {}));
+    save("radio-checked-pressed", indicator, radioButton({}, c["accentPressed"], true, c["accentText"]));
+
+    // Tree views: branch lines and open/closed arrows
+    const QSize branch(20, 20);
+    save("branch-line", branch, branchLines(c["borderStrong"], Branch::Line));
+    save("branch-more", branch, branchLines(c["borderStrong"], Branch::More));
+    save("branch-end", branch, branchLines(c["borderStrong"], Branch::End));
+    save("branch-closed", arrow, chevronRight(c["textSecondary"]));
+    save("branch-open", arrow, chevron(c["textSecondary"], false));
 
     save("grip-vertical", QSize(3, 14), gripDots(c["grip"], true));     // QSplitter::handle:horizontal
     save("grip-horizontal", QSize(14, 3), gripDots(c["grip"], false));  // QSplitter::handle:vertical
