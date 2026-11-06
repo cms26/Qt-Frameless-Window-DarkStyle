@@ -135,6 +135,29 @@ style->setExtraStyleSheet(R"(
 
 Your rules come after ModernStyle's, so they win where both style the same thing, and they stay when the theme or accent changes. The `@names` are filled in for the current theme, so one set of rules works in light and dark. A rule with an object name (`#fooName`) beats ModernStyle's `:hover`/`:checked` rules, so give it those states too, as above.
 
+### Settings from Qt Designer
+
+Frame settings made in Designer (or in code before the widget is shown) are followed, even on widgets ModernStyle draws its own border for:
+
+| Setting | Result |
+|---|---|
+| `frameShape` = `NoFrame` (text boxes, lists, tables, trees, any frame) | no border |
+| `frameShadow` = `Plain` (text boxes, lists, tables, trees) | a plain line, square corners |
+| `frameShadow` = `Raised` | a raised edge |
+| `frameShadow` = `Sunken` (their default) | ModernStyle's rounded border |
+| `frame` off (`QLineEdit`, `QComboBox`, spin boxes) | no border |
+
+Plain `QFrame`s ("Frame" in Designer: boxes, panels, lines) draw their shape and shadow as usual. If you change one of these settings on a widget that is already shown, call `w->style()->unpolish(w); w->style()->polish(w);` afterwards.
+
+**Font sizes for single widgets**: give the widget a dynamic property `fontPointSize` (in Designer: the "+" above the property list, Number or Double, e.g. `14`), or set a size for an object name in code:
+
+```cpp
+label->setProperty("fontPointSize", 14);           // the same as the Designer property
+style->setObjectFontPointSize("titleLabel", 18);   // every widget named "titleLabel", also ones created later
+```
+
+The widget's children use the size too, unless they have their own. It stays across theme changes. A style sheet rule with `font-size` for the same widget wins over both.
+
 ### If it doesn't look like the screenshots
 
 - Check the program's output for `ModernStyle:` warnings: one says the style sheet resource is missing (link the `FramelessWindow::FramelessWindow` target instead of compiling the library's `.cpp` files into your own target), the other that `qApp->setStyleSheet()` replaced the sheet.
