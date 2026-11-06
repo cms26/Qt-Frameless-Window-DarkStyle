@@ -72,6 +72,14 @@ public:
     int comboPopupMaxHeight() const { return m_comboPopupMaxHeight; }
     void setComboPopupMaxHeight(int pixels) { m_comboPopupMaxHeight = qMax(0, pixels); }
 
+    // Dock widgets: give each one ModernStyle's title bar (DockTitleBar), which
+    // shows the dock's icon (QDockWidget::setWindowIcon()) docked and
+    // floating. On by default; dock widgets with a title bar widget of their
+    // own keep it. Set before the dock widgets are shown. Either way, tabbed
+    // dock widgets show their icons in the tabs.
+    bool dockTitleBars() const { return m_dockTitleBars; }
+    void setDockTitleBars(bool on) { m_dockTitleBars = on; }
+
     // QStyle
     QPalette standardPalette() const override;
     void polish(QPalette &palette) override;
@@ -100,5 +108,6 @@ private:
     QPalette m_systemPalette;        // the palette before this style changed it
     bool m_applying = false;
     int m_comboPopupMaxHeight = 0;
+    bool m_dockTitleBars = true;
     mutable std::unique_ptr<QTemporaryDir> m_imageDir;   // the drawn images
 };

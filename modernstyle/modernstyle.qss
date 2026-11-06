@@ -136,6 +136,13 @@ QCheckBox::indicator:checked:disabled, QGroupBox::indicator:checked:disabled
     { image: url(@icons/checkbox-checked-disabled.png); }
 QCheckBox::indicator:indeterminate:disabled
     { image: url(@icons/checkbox-indeterminate-disabled.png); }
+/* While the mouse button is held down on it */
+QCheckBox::indicator:unchecked:pressed, QGroupBox::indicator:unchecked:pressed
+    { image: url(@icons/checkbox-pressed.png); }
+QCheckBox::indicator:checked:pressed, QGroupBox::indicator:checked:pressed
+    { image: url(@icons/checkbox-checked-pressed.png); }
+QCheckBox::indicator:indeterminate:pressed
+    { image: url(@icons/checkbox-indeterminate-pressed.png); }
 
 QRadioButton::indicator:unchecked          { image: url(@icons/radio.png); }
 QRadioButton::indicator:unchecked:hover    { image: url(@icons/radio-hover.png); }
@@ -143,6 +150,8 @@ QRadioButton::indicator:checked            { image: url(@icons/radio-checked.png
 QRadioButton::indicator:checked:hover      { image: url(@icons/radio-checked-hover.png); }
 QRadioButton::indicator:unchecked:disabled { image: url(@icons/radio-disabled.png); }
 QRadioButton::indicator:checked:disabled   { image: url(@icons/radio-checked-disabled.png); }
+QRadioButton::indicator:unchecked:pressed  { image: url(@icons/radio-pressed.png); }
+QRadioButton::indicator:checked:pressed    { image: url(@icons/radio-checked-pressed.png); }
 
 /* --- Lists, trees, tables ----------------------------------------------------- */
 
@@ -156,12 +165,17 @@ QAbstractItemView {
     selection-color: @accentText;
     gridline-color: @border;
 }
+/* Selected rows of a disabled view: grey instead of the accent */
+QAbstractItemView::item:selected:disabled { background-color: @border; color: @textDisabled; }
+
+/* Headers: the same see-through band as toolbars, darker at the bottom */
 QTableView QTableCornerButton::section {
-    background-color: @surfaceAlt;
+    background: @toolbarBottomFill;
     border: none;
+    border-bottom: 1px solid @border;
 }
 QHeaderView::section {
-    background-color: @surfaceAlt;
+    background: @toolbarBottomFill;
     color: @textSecondary;
     border: none;
     border-right: 1px solid @border;
@@ -169,9 +183,27 @@ QHeaderView::section {
     padding: 4px 8px;
 }
 
+/* Tree views: lines from parent to child, arrows on items with children */
+QTreeView::branch:has-siblings:!adjoins-item  { border-image: url(@icons/branch-line.png) 0; }
+QTreeView::branch:has-siblings:adjoins-item   { border-image: url(@icons/branch-more.png) 0; }
+QTreeView::branch:!has-children:!has-siblings:adjoins-item { border-image: url(@icons/branch-end.png) 0; }
+QTreeView::branch:has-children:!has-siblings:closed,
+QTreeView::branch:closed:has-children:has-siblings {
+    border-image: none;
+    image: url(@icons/branch-closed.png);
+}
+QTreeView::branch:open:has-children:!has-siblings,
+QTreeView::branch:open:has-children:has-siblings {
+    border-image: none;
+    image: url(@icons/branch-open.png);
+}
+
 /* --- Tabs ----------------------------------------------------------------- */
 
+QTabBar { qproperty-drawBase: 0; }     /* no base line under tab bars on their own */
+
 QTabWidget::pane {
+    background: @boxFill;
     border: 1px solid @border;
     border-radius: 10px;
     top: -1px;
@@ -227,6 +259,7 @@ QGroupBox {
     border-top-left-radius: 3px;  /* the line runs nearly square into the sides */
     border-top-right-radius: 3px;
     margin-top: 22px;             /* the title tab's height: it sits on the line */
+    background: @boxFill;         /* a lighter, see-through area */
     padding: 10px 8px 8px 8px;
 }
 QGroupBox::title {
@@ -265,7 +298,7 @@ QScrollBar::handle {
     min-height: 24px;
     margin: 1px;
 }
-QScrollBar::handle:hover   { background-color: @grooveHover; }
+QScrollBar::handle:hover   { background-color: @accent; }
 QScrollBar::handle:pressed { background-color: @accent; }
 QScrollBar::add-line, QScrollBar::sub-line { width: 0; height: 0; border: none; background: none; }
 QScrollBar::add-page, QScrollBar::sub-page { background: none; }
@@ -303,10 +336,25 @@ QProgressBar::chunk:disabled { background-color: @textDisabled; }
 
 /* --- Menus, menu bar, tool bar, status bar ----------------------------------------- */
 
-QMenuBar { background: transparent; color: @text; padding: 2px; }
-QMenuBar::item { background: transparent; padding: 4px 10px; border-radius: 4px; }
-QMenuBar::item:selected { background-color: @controlHover; }
-QMenuBar::item:pressed  { background-color: @controlPressed; }
+/* Menu bar: the toolbar band, with a 2 px edge below */
+QMenuBar {
+    background: @toolbarTopFill;
+    border-bottom: 2px solid @barEdge;
+    color: @text;
+    padding: 2px;
+}
+QMenuBar::item { background: transparent; padding: 4px 10px; border-radius: 4px; spacing: 2px; }
+QMenuBar::item:selected {
+    background: @menuBarItemHoverFill;
+    border-left: 1px solid @menuBarItemEdge;
+    border-right: 1px solid @menuBarItemEdge;
+}
+QMenuBar::item:pressed {
+    background: @accent;
+    color: @accentText;
+    border-left: 1px solid @barEdge;
+    border-right: 1px solid @barEdge;
+}
 
 QMenu {
     background-color: @menu;
@@ -315,9 +363,22 @@ QMenu {
     border-radius: 8px;
     padding: 4px;
 }
-QMenu::item { padding: 6px 28px 6px 24px; border-radius: 4px; }
-QMenu::item:selected { background-color: @selection; }
-QMenu::item:disabled { color: @textDisabled; }
+QMenu::item { padding: 6px 28px 6px 28px; border: 1px solid transparent; border-radius: 4px; }
+QMenu::item:selected { background-color: @accent; color: @accentText; }
+QMenu::item:disabled { color: @textDisabled; background: transparent; }
+
+/* Checkable menu items: the same check boxes and radio buttons as elsewhere */
+QMenu::indicator { width: 16px; height: 16px; left: 6px; }
+QMenu::indicator:non-exclusive:unchecked { image: url(@icons/checkbox.png); }
+QMenu::indicator:non-exclusive:checked   { image: url(@icons/checkbox-checked.png); }
+QMenu::indicator:exclusive:unchecked     { image: url(@icons/radio.png); }
+QMenu::indicator:exclusive:checked       { image: url(@icons/radio-checked.png); }
+/* A checked item that has an icon: the icon gets a frame */
+QMenu::icon:checked {
+    background: @selection;
+    border: 1px solid @accent;
+    border-radius: 3px;
+}
 QMenu::separator { height: 1px; background-color: palette(alternate-base); margin: 4px 8px; }
 
 /* Toolbars: a see-through band, darker towards the window's edge, with a
@@ -355,6 +416,34 @@ QDockWidget::close-button, QDockWidget::float-button {
 QDockWidget::close-button:hover, QDockWidget::float-button:hover { background-color: @controlHover; }
 QDockWidget::close-button:pressed, QDockWidget::float-button:pressed { background-color: @controlPressed; }
 
+/* ModernStyle's own dock title bar (DockTitleBar): icon, title, buttons.
+   The same card header look as above. */
+QWidget#ModernDockTitle {
+    background-color: @panelHeader;
+    border: 1px solid @border;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+}
+QWidget#ModernDockTitle[floating="true"] {
+    border-radius: 0;           /* a floating dock widget's window is square */
+}
+QLabel#ModernDockTitleText { color: @textSecondary; background: transparent; }
+QLabel#ModernDockTitleIcon { background: transparent; }
+QToolButton#ModernDockFloatButton, QToolButton#ModernDockCloseButton {
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    padding: 2px;
+}
+QToolButton#ModernDockFloatButton:hover, QToolButton#ModernDockCloseButton:hover {
+    background-color: @controlHover;
+}
+QToolButton#ModernDockFloatButton:pressed, QToolButton#ModernDockCloseButton:pressed {
+    background-color: @controlPressed;
+}
+QToolButton#ModernDockFloatButton { qproperty-icon: url(@icons/dock-float.png); }
+QToolButton#ModernDockCloseButton { qproperty-icon: url(@icons/dock-close.png); }
+
 /* The contents: the card body ($card-bg), lighter than the window. Lists,
    text boxes etc. inside fill themselves with the same colour. */
 QDockWidget > QWidget {
@@ -377,13 +466,13 @@ QSplitter::handle:vertical   { height: 10px; image: url(@icons/grip-horizontal.p
 QMainWindow::separator:vertical   { width: 6px; image: url(@icons/grip-vertical.png); }
 QMainWindow::separator:horizontal { height: 6px; image: url(@icons/grip-horizontal.png); }
 
-QStatusBar { background: transparent; color: @textSecondary; }
+QStatusBar { background: @toolbarBottomFill; color: @textSecondary; }
 QStatusBar::item { border: none; }
 
 QToolTip {
     background-color: @tooltip;
     color: @text;
-    border: 1px solid @border;
+    border: 1px solid @accent;
     padding: 4px 8px;
 }
 

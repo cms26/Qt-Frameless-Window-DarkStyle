@@ -3,6 +3,8 @@
 
 #include "modernstyle.h"
 
+#include "docktitlebar.h"
+
 #include <QApplication>
 #include <QDir>
 #include <QFile>
@@ -10,6 +12,11 @@
 #include <QPainterPath>
 #include <QAbstractItemView>
 #include <QComboBox>
+#include <QDockWidget>
+#include <QMainWindow>
+#include <QPointer>
+#include <QTabBar>
+#include <QTimer>
 #include <QMenu>
 #include <QMetaEnum>
 #include <QStyleFactory>
@@ -136,6 +143,13 @@ QHash<QString, QString> themeFills(bool dark, const QHash<QString, QColor> &c)
         // window (top: edge at the bottom, left: edge on the right, ...)
         f["toolbarDarkEnd"] = QStringLiteral("rgba(25, 25, 25, 127)");
         f["toolbarLightEnd"] = QStringLiteral("rgba(53, 53, 53, 75)");
+        f["barEdge"] = QStringLiteral("rgba(25, 25, 25, 75)");          // menu bar's bottom edge
+        // Group boxes and tab pages: a lighter, see-through area
+        f["boxFill"] = QStringLiteral("rgba(66, 66, 66, 128)");
+        // Menu bar item under the mouse: a grey glow fading downwards
+        f["menuBarItemHoverFill"] = QStringLiteral(
+            "qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 rgba(106, 106, 106, 255), stop:1 rgba(106, 106, 106, 75))");
+        f["menuBarItemEdge"] = QStringLiteral("rgba(106, 106, 106, 127)");
     } else {
         // Spacelab's btn-shadow(): tint 24% -> the colour at 50% -> shade 8%,
         // border shade 20%. Buttons are .btn-light ($gray-200); hovered,
@@ -158,6 +172,11 @@ QHash<QString, QString> themeFills(bool dark, const QHash<QString, QColor> &c)
         // Toolbars: a light band, see-through like the dark one
         f["toolbarDarkEnd"] = QStringLiteral("rgba(206, 212, 218, 150)");
         f["toolbarLightEnd"] = QStringLiteral("rgba(255, 255, 255, 120)");
+        f["barEdge"] = QStringLiteral("rgba(173, 181, 189, 110)");
+        f["boxFill"] = QStringLiteral("rgba(255, 255, 255, 200)");
+        f["menuBarItemHoverFill"] = QStringLiteral(
+            "qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 rgba(173, 181, 189, 200), stop:1 rgba(173, 181, 189, 60))");
+        f["menuBarItemEdge"] = QStringLiteral("rgba(173, 181, 189, 160)");
     }
     f["checkedText"] = QStringLiteral("#ffffff");
     // The toolbar gradients, one per side, from the two ends above: the
@@ -234,6 +253,34 @@ Painter dockFloat(const QColor &color)
         p.setBrush(Qt::NoBrush);
         p.drawRoundedRect(QRectF(4.5, 1.5, 6, 6), 1, 1);           // back
         p.drawRoundedRect(QRectF(1.5, 4.5, 6, 6), 1, 1);           // front
+    };
+}
+
+// A chevron pointing right (closed tree branch), 10 x 10
+Painter chevronRight(const QColor &color)
+{
+    return [=](QPainter &p) {
+        QPen pen(color, 1.4);
+        pen.setCapStyle(Qt::RoundCap);
+        pen.setJoinStyle(Qt::RoundJoin);
+        p.setPen(pen);
+        const QPointF points[] = { { 3.5, 2.0 }, { 6.5, 5.0 }, { 3.5, 8.0 } };
+        p.drawPolyline(points, 3);
+    };
+}
+
+// Tree branch lines, 20 x 20 (stretched to the row by border-image): a line
+// down the middle; "more": plus a line to the item; "end": the top half
+// down to the item, then to it
+enum class Branch { Line, More, End };
+Painter branchLines(const QColor &color, Branch kind)
+{
+    return [=](QPainter &p) {
+        p.setRenderHint(QPainter::Antialiasing, false);
+        p.setPen(QPen(color, 1));
+        p.drawLine(QPointF(9, 0), QPointF(9, kind == Branch::End ? 10 : 20));
+        if (kind != Branch::Line)
+            p.drawLine(QPointF(9, 10), QPointF(19, 10));
     };
 }
 
@@ -427,6 +474,54 @@ void ModernStyle::polish(QApplication *app)
         apply();
 }
 
+namespace {
+
+// The tab bars QMainWindow makes for tabbed dock widgets: a QTabBar whose
+// parent is the main window itself
+bool isDockTabBar(const QWidget *widget)
+{
+    return qobject_cast<const QTabBar *>(widget) && qobject_cast<QMainWindow *>(widget->parentWidget());
+}
+
+// Put each dock widget's icon on its tab. QMainWindow stores the dock
+// widget's address as the tab's data; it is only compared with the main
+// window's dock widgets, never used as a pointer on its own.
+void syncDockTabIcons(QTabBar *tabs)
+{
+    auto *mainWindow = qobject_cast<QMainWindow *>(tabs->parentWidget());
+    if (!mainWindow)
+        return;
+    const QList<QDockWidget *> docks = mainWindow->findChildren<QDockWidget *>();
+    for (int i = 0; i < tabs->count(); ++i) {
+        const quintptr id = tabs->tabData(i).value<quintptr>();
+        for (QDockWidget *dock : docks) {
+            if (reinterpret_cast<quintptr>(dock) != id)
+                continue;
+            const QIcon icon = dock->testAttribute(Qt::WA_SetWindowIcon) ? dock->windowIcon() : QIcon();
+            if (tabs->tabIcon(i).cacheKey() != icon.cacheKey())
+                tabs->setTabIcon(i, icon);
+            break;
+        }
+    }
+}
+
+// Again after the current event: QMainWindow rebuilds its tab bars when dock
+// widgets are tabbed, moved or floated, and icons may change at any time
+void syncDockTabIconsLater(QTabBar *tabs)
+{
+    if (tabs->property("_modernIconSyncPending").toBool())
+        return;
+    tabs->setProperty("_modernIconSyncPending", true);
+    QTimer::singleShot(0, tabs, [tabs = QPointer<QTabBar>(tabs)] {
+        if (!tabs)
+            return;
+        tabs->setProperty("_modernIconSyncPending", false);
+        syncDockTabIcons(tabs);
+    });
+}
+
+} // namespace
+
 void ModernStyle::polish(QWidget *widget)
 {
     QProxyStyle::polish(widget);
@@ -440,17 +535,49 @@ void ModernStyle::polish(QWidget *widget)
     // maximum height (eventFilter())
     if (auto *combo = qobject_cast<QComboBox *>(widget))
         combo->view()->window()->installEventFilter(this);
+
+    // Dock widgets: the title bar with icon (DockTitleBar), and watch for
+    // icon changes, which their tabs must show
+    if (auto *dock = qobject_cast<QDockWidget *>(widget)) {
+        if (m_dockTitleBars)
+            DockTitleBar::install(dock);
+        dock->installEventFilter(this);
+    }
+    // Tabbed dock widgets: icons on the tabs
+    if (isDockTabBar(widget)) {
+        widget->installEventFilter(this);
+        syncDockTabIconsLater(static_cast<QTabBar *>(widget));
+    }
 }
 
 void ModernStyle::unpolish(QWidget *widget)
 {
     if (auto *combo = qobject_cast<QComboBox *>(widget))
         combo->view()->window()->removeEventFilter(this);
+    if (qobject_cast<QDockWidget *>(widget) || isDockTabBar(widget))
+        widget->removeEventFilter(this);
     QProxyStyle::unpolish(widget);
 }
 
 bool ModernStyle::eventFilter(QObject *watched, QEvent *event)
 {
+    // Dock widget tabs: QMainWindow refills them (titles) without icons; put
+    // the icons back before they're painted. Cheap when nothing changed.
+    if (event->type() == QEvent::Paint || event->type() == QEvent::Show) {
+        auto *tabs = qobject_cast<QTabBar *>(watched);
+        if (tabs && isDockTabBar(tabs))
+            syncDockTabIconsLater(tabs);
+    }
+    // A dock widget's icon changed: its tab must show the new one
+    if (event->type() == QEvent::WindowIconChange) {
+        if (auto *dock = qobject_cast<QDockWidget *>(watched)) {
+            if (auto *mainWindow = qobject_cast<QMainWindow *>(dock->parentWidget())) {
+                for (QTabBar *tabs : mainWindow->findChildren<QTabBar *>(QString(), Qt::FindDirectChildrenOnly))
+                    syncDockTabIconsLater(tabs);
+            }
+        }
+    }
+
     // A combo box's drop-down list is being shown: QComboBox has sized it for
     // its items; make it no taller than the maximum height (the combo box's
     // own "popupMaxHeight" property, else comboPopupMaxHeight()). The list
@@ -548,6 +675,20 @@ QString ModernStyle::writeImages() const
     save("radio-checked-hover", indicator, radioButton({}, c["accentHover"], true, c["accentText"]));
     save("radio-disabled", indicator, radioButton(c["border"], c["window"], false, {}));
     save("radio-checked-disabled", indicator, radioButton({}, c["border"], true, c["textDisabled"]));
+    // Pressed (mouse held down): accent edge, or the darker accent when checked
+    save("checkbox-pressed", indicator, checkBox(c["accent"], c["surface"], Mark::None, {}));
+    save("checkbox-checked-pressed", indicator, checkBox({}, c["accentPressed"], Mark::Check, c["accentText"]));
+    save("checkbox-indeterminate-pressed", indicator, checkBox({}, c["accentPressed"], Mark::Dash, c["accentText"]));
+    save("radio-pressed", indicator, radioButton(c["accent"], c["surface"], false, {}));
+    save("radio-checked-pressed", indicator, radioButton({}, c["accentPressed"], true, c["accentText"]));
+
+    // Tree views: branch lines and open/closed arrows
+    const QSize branch(20, 20);
+    save("branch-line", branch, branchLines(c["borderStrong"], Branch::Line));
+    save("branch-more", branch, branchLines(c["borderStrong"], Branch::More));
+    save("branch-end", branch, branchLines(c["borderStrong"], Branch::End));
+    save("branch-closed", arrow, chevronRight(c["textSecondary"]));
+    save("branch-open", arrow, chevron(c["textSecondary"], false));
 
     save("grip-vertical", QSize(3, 14), gripDots(c["grip"], true));     // QSplitter::handle:horizontal
     save("grip-horizontal", QSize(14, 3), gripDots(c["grip"], false));  // QSplitter::handle:vertical
