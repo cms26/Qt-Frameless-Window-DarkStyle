@@ -82,6 +82,15 @@ public:
     bool dockTitleBars() const { return m_dockTitleBars; }
     void setDockTitleBars(bool on) { m_dockTitleBars = on; }
 
+    // Your own application-wide style sheet rules, added after ModernStyle's
+    // so they win where both style the same thing. They may use the same
+    // @names as modernstyle.qss (@accent, @border, @buttonFill, ...), filled
+    // in for the current theme, and they stay when the theme or the accent
+    // changes. Calling it again replaces the previous rules.
+    //   style->setExtraStyleSheet("QToolButton#fooName { border: 2px groove @border; }");
+    QString extraStyleSheet() const { return m_extraSheet; }
+    void setExtraStyleSheet(const QString &rules);
+
     // The style sheet ModernStyle put on the application, colours filled in.
     // To add rules for the whole application, append yours:
     //   qApp->setStyleSheet(style->currentStyleSheet() + myRules);
@@ -116,6 +125,7 @@ private:
     QPalette m_systemPalette;        // the palette before this style changed it
     bool m_applying = false;
     int m_comboPopupMaxHeight = 0;
+    QString m_extraSheet;            // setExtraStyleSheet()
     QString m_appliedSheet;          // the sheet apply() set on the application
     bool m_warnedSheetReplaced = false;
     QString m_checkedSheet;          // the last other application sheet looked at
