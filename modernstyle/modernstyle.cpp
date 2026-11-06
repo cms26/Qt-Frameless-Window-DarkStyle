@@ -224,6 +224,16 @@ QHash<QString, QString> themeFills(bool dark, const QHash<QString, QColor> &c)
         f["menuBarItemEdge"] = QStringLiteral("rgba(150, 150, 150, 160)");
     }
     f["checkedText"] = QStringLiteral("#ffffff");
+    // More values from the application's dark style sheet, with light
+    // counterparts
+    f["menuBorder"] = dark ? QStringLiteral("rgb(20, 20, 20)") : QStringLiteral("rgb(200, 200, 200)");   // palette(shadow) / Mid
+    f["menuSelectedEdge"] = QStringLiteral("rgba(147, 191, 236, 127)");
+    f["menuDisabledFill"] = dark ? QStringLiteral("rgba(35, 35, 35, 127)") : QStringLiteral("rgba(226, 226, 226, 127)");
+    f["pressedEdge"] = dark ? QStringLiteral("rgba(25, 25, 25, 127)") : QStringLiteral("rgba(25, 25, 25, 60)");
+    f["softLine"] = dark ? QStringLiteral("rgba(25, 25, 25, 50%)") : QStringLiteral("rgba(25, 25, 25, 25%)");      // tab bar / pane edge
+    f["tabSelectedEdge"] = dark ? QStringLiteral("rgba(66, 66, 66, 75%)") : QStringLiteral("rgba(226, 226, 226, 75%)");
+    f["disabledSelection"] = QStringLiteral("rgb(80, 80, 80)");      // palette Disabled Highlight
+    f["sliderHandleBorder"] = dark ? QStringLiteral("rgba(25, 25, 25, 255)") : QStringLiteral("rgb(150, 150, 150)");
     // Group boxes: border, and the line under the title tab (as the
     // application's style sheet)
     f["groupBorder"] = dark ? QStringLiteral("rgba(25, 25, 25, 127)") : QStringLiteral("rgba(25, 25, 25, 70)");
