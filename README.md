@@ -19,13 +19,13 @@ Version 2 of this fork brings the original [Qt-Frameless-Window-DarkStyle](https
 - Takes its title and icon from the content (e.g. your `QMainWindow`) and follows later title changes.
 
 **ModernStyle**
-- **The dark theme matches [Bootswatch Slate](https://bootswatch.com/slate/)**, so a Qt app and a Bootstrap web front end using Slate look alike: the same background (`#272b30`), panels, near-black borders, grey text, and Slate's gradient buttons and tabs (raised, sunken on hover, darker when pressed). The values come from Slate's own Sass (`_variables.scss`, `_bootswatch.scss`) and were checked pixel by pixel against Slate rendered in a browser. **The light theme follows [Bootswatch Spacelab](https://bootswatch.com/spacelab/)**, Slate's light sibling: the same gradient buttons in light greys, a `#f8f9fa` background and white panels.
-- Light and dark themes, flat and rounded, with one accent colour for selections, default buttons, focus, sliders, progress bars, check boxes and radio buttons.
+- **The palettes are the application's own dark and white palettes**, role for role (`Window` `rgb(53,53,53)` / white, `Base`, `AlternateBase`, `Highlight` `rgb(42,130,218)` / `rgb(90,154,209)`, the disabled colours, ...): `standardPalette()` returns exactly those, and the style sheet's colours are taken from them. Buttons are grey gradients on top, raised and darker when pressed.
+- One accent colour, the palette's `Highlight` unless you set another, for selections, default buttons, focus, sliders, progress bars, check boxes and radio buttons.
 - `Theme::System` (default) follows the OS light/dark setting and **switches live when it changes** (Qt 6.5+; older Qt picks at start-up).
 - Switch at run time with `setTheme()`, change the accent with `setAccentColor()`.
 - Themes by name, e.g. for a settings dialog or a command-line option: `getThemeNames()` gives `"System", "Light", "Dark"`, `ModernStyle::themeFromName("dark")` the theme (any case; `Theme::Invalid` for an unknown name), `ModernStyle::themeName(theme)` the name back.
 - Checked buttons and tool buttons are blue (a `#428bca` gradient) and turn darker under the mouse; unchecked tool buttons light up under the mouse.
-- The selected tab has a blue line under it. Group box titles are darker, rounded tabs sitting on a thick grey line.
+- The selected tab has a blue line under it. Group boxes are lighter, see-through boxes with the title as a small tab on top, underlined in grey: the application's own group box style sheet, pixel for pixel.
 - Toolbars, the menu bar, the status bar and table/tree headers share a see-through band, darker towards the window edge; toolbars have a 3 px edge towards the contents (top, bottom, left and right toolbars). Menu bar items glow grey under the mouse and turn the accent colour when opened.
 - Group boxes and tab pages are lighter, see-through areas, so nested ones stand out.
 - Menus: the accent colour on the item under the mouse, check boxes and radio buttons for checkable actions, a frame around the icon of a checked action. Tool tips have an accent border.
@@ -34,7 +34,7 @@ Version 2 of this fork brings the original [Qt-Frameless-Window-DarkStyle](https
 - Based on Qt's Fusion style, plus one readable style sheet (`modernstyle/modernstyle.qss`) with named colours (`@accent`, `@border`, ...) you can edit.
 - Check boxes, radio buttons and arrows are drawn in the theme's colours at 1× and 2×: no image files, no Qt SVG module needed.
 - **Dock widget icons**: `dock->setWindowIcon(icon)` shows the icon in the dock widget's title bar, on its tab when dock widgets are tabbed together, and in the title bar while it floats. ModernStyle gives dock widgets its own title bar (`DockTitleBar`: icon, title, float and close buttons) for this, because Qt's doesn't show icons, and a floating dock widget on Windows gets a system tool-window title bar without one. Dragging, double-click to float or dock again, and resizing a floating dock widget work as before. Dock widgets with a title bar widget of your own keep it; `style->setDockTitleBars(false)` turns it off for all (tabs still show icons).
-- **Dock widgets are panels like Slate's cards**: a lighter body (`$card-bg`, `#32383e`) and a header-coloured title bar (`$card-cap-bg`, `#515960`) with rounded top corners and clear close / float buttons. Splitter handles, the gaps between dock widgets and the menu and toolbar separators use `palette(alternate-base)`.
+- **Dock widgets are panels**: a body a little lighter than the window and a lighter title bar with rounded top corners and clear close / float buttons. Splitter handles, the gaps between dock widgets and the menu and toolbar separators use `palette(alternate-base)`.
 - Toolbar buttons light up on hover like push buttons, checked ones included (a checked button gets brighter under the mouse).
 - Long combo box lists scroll: `style->setComboPopupMaxHeight(240)` caps every drop-down at 240 px, and `combo->setProperty("popupMaxHeight", 120)` sets a limit for a single combo box. Without either, `QComboBox::maxVisibleItems()` (10) applies.
 - `DarkStyle` still exists: `QApplication::setStyle(new DarkStyle)` keeps working (always dark).
@@ -103,7 +103,7 @@ At run time:
 style->setTheme(ModernStyle::Theme::Light);      // System, Light or Dark (Invalid is ignored)
 themeBox->addItems(style->getThemeNames());      // "System", "Light", "Dark"
 style->setTheme(ModernStyle::themeFromName(settings.value("theme").toString()));
-style->setAccentColor(QColor("#7c3aed"));        // any colour
+style->setAccentColor(QColor("#7c3aed"));        // any colour; QColor() = the palette's Highlight again
 connect(style, &ModernStyle::themeChanged, this, [](bool dark) { /* e.g. swap your own icons */ });
 
 window.setResizable(false);                      // fixed size, no resize cursors
@@ -114,7 +114,7 @@ You can also use only one of the two parts: `ModernStyle` works with ordinary wi
 
 ### Changing the look
 
-The style sheet is [`modernstyle/modernstyle.qss`](modernstyle/modernstyle.qss). Colours are written as `@name` and filled in from the current theme. The names and their light/dark values are in `themeColors()` at the top of [`modernstyle/modernstyle.cpp`](modernstyle/modernstyle.cpp), with the Slate variable each dark colour comes from. Buttons and tabs use `@buttonFill`, `@tabFill` and friends (`themeFills()`): plain colours in the light theme, Slate's gradients in the dark one. Change values there, or add your own rules to the sheet; it is compiled in as a resource.
+The style sheet is [`modernstyle/modernstyle.qss`](modernstyle/modernstyle.qss). Colours are written as `@name` and filled in from the current theme. The names and their light/dark values are in `themeColors()` at the top of [`modernstyle/modernstyle.cpp`](modernstyle/modernstyle.cpp), made from the palettes in `themePalette()` (the palette role each comes from is noted). Buttons, tabs, bars and boxes use `@buttonFill`, `@tabFill`, `@boxFill` and friends (`themeFills()`), which can be gradients or see-through colours. Change values there, or add your own rules to the sheet; it is compiled in as a resource.
 
 If your application sets its own style sheet with `qApp->setStyleSheet()`, it replaces ModernStyle's. Set style sheets on your own widgets instead (`myWidget->setStyleSheet(...)`), or append your rules to `modernstyle.qss`.
 

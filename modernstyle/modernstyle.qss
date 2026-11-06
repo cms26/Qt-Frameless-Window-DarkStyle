@@ -8,8 +8,8 @@
 
 /* --- Buttons ------------------------------------------------------------- */
 
-/* @buttonFill etc.: plain colours in the light theme, Slate's gradients in
-   the dark theme (themeFills() in modernstyle.cpp) */
+/* @buttonFill etc.: grey gradients in both themes (themeFills() in
+   modernstyle.cpp) */
 QPushButton {
     background: @buttonFill;
     color: @buttonText;
@@ -250,27 +250,26 @@ QTabBar::tab:bottom:selected {
 
 /* --- Group boxes ------------------------------------------------------------ */
 
-/* The title is a darker, rounded tab sitting on a thick grey line: the
-   group box's top border */
+/* A lighter, see-through box; the title is a small tab on top of it with
+   a grey line under it (the application's own group box style) */
 QGroupBox {
-    border: 1px solid @border;
-    border-top: 3px solid @groupLine;
-    border-radius: 8px;
-    border-top-left-radius: 3px;  /* the line runs nearly square into the sides */
-    border-top-right-radius: 3px;
-    margin-top: 22px;             /* the title tab's height: it sits on the line */
-    background: @boxFill;         /* a lighter, see-through area */
+    background: @boxFill;
+    margin-top: 27px;
+    border: 1px solid @groupBorder;
+    border-radius: 4px;
     padding: 10px 8px 8px 8px;
 }
 QGroupBox::title {
     subcontrol-origin: margin;
-    subcontrol-position: top left;
-    left: 8px;
-    padding: 4px 12px;
-    background-color: @groupTitle;
+    subcontrol-position: left top;
+    padding: 4px 6px;
+    margin-left: 3px;
+    background: @toolbarBottomFill;
     color: @text;
-    border-top-left-radius: 6px;
-    border-top-right-radius: 6px;
+    border: 1px solid @barEdge;
+    border-bottom: 2px solid @groupTitleLine;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
 }
 QGroupBox::title:disabled { color: @textDisabled; }
 
@@ -390,9 +389,9 @@ QToolBar:left   { background: @toolbarLeftFill;   border-right: 3px solid @toolb
 QToolBar:right  { background: @toolbarRightFill;  border-left: 3px solid @toolbarRightFill; }
 QToolBar::separator { background-color: palette(alternate-base); width: 1px; margin: 4px 6px; }
 
-/* --- Dock widgets: panels like Slate's cards ------------------------------------ */
+/* --- Dock widgets: panels, lighter than the window ------------------------------ */
 
-/* Title bar: the card header ($card-cap-bg), rounded at the top */
+/* Title bar: a lighter header, rounded at the top */
 QDockWidget {
     color: @textSecondary;
     titlebar-close-icon: url(@icons/dock-close.png);
@@ -417,7 +416,7 @@ QDockWidget::close-button:hover, QDockWidget::float-button:hover { background-co
 QDockWidget::close-button:pressed, QDockWidget::float-button:pressed { background-color: @controlPressed; }
 
 /* ModernStyle's own dock title bar (DockTitleBar): icon, title, buttons.
-   The same card header look as above. */
+   The same header look as above. */
 QWidget#ModernDockTitle {
     background-color: @panelHeader;
     border: 1px solid @border;
@@ -444,7 +443,7 @@ QToolButton#ModernDockFloatButton:pressed, QToolButton#ModernDockCloseButton:pre
 QToolButton#ModernDockFloatButton { qproperty-icon: url(@icons/dock-float.png); }
 QToolButton#ModernDockCloseButton { qproperty-icon: url(@icons/dock-close.png); }
 
-/* The contents: the card body ($card-bg), lighter than the window. Lists,
+/* The contents: lighter than the window. Lists,
    text boxes etc. inside fill themselves with the same colour. */
 QDockWidget > QWidget {
     background-color: @panel;
