@@ -26,6 +26,7 @@ Version 2 of this fork brings the original [Qt-Frameless-Window-DarkStyle](https
 - Themes by name, e.g. for a settings dialog or a command-line option: `getThemeNames()` gives `"System", "Light", "Dark"`, `ModernStyle::themeFromName("dark")` the theme (any case; `Theme::Invalid` for an unknown name), `ModernStyle::themeName(theme)` the name back.
 - Checked buttons and tool buttons are blue (a `#428bca` gradient) and turn darker under the mouse; unchecked tool buttons light up under the mouse.
 - The selected tab has a blue line under it. Group boxes are lighter, see-through boxes with the title as a small tab on top, underlined in grey: the application's own group box style sheet, pixel for pixel.
+- Toolbar buttons are raised grey buttons with a groove edge, darker under the mouse and blue when checked; Qwt legend entries look the same (checked: bold and blue, unchecked: italic).
 - Toolbars, the menu bar, the status bar and table/tree headers share a see-through band, darker towards the window edge; toolbars have a 3 px edge towards the contents (top, bottom, left and right toolbars). Menu bar items glow grey under the mouse and turn the accent colour when opened.
 - Group boxes and tab pages are lighter, see-through areas, so nested ones stand out.
 - Menus: the accent colour on the item under the mouse, check boxes and radio buttons for checkable actions, a frame around the icon of a checked action. Tool tips have an accent border.
