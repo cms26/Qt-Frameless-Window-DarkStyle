@@ -17,6 +17,8 @@
 #include <QPointer>
 #include <QTabBar>
 #include <QTimer>
+#include <QToolBar>
+#include <QToolButton>
 #include <QMenu>
 #include <QMetaEnum>
 #include <QStyleFactory>
@@ -202,41 +204,51 @@ QHash<QString, QString> themeFills(bool dark, const QHash<QString, QColor> &c)
         f["buttonBorder"] = QStringLiteral("#b5b5b5");
         f["buttonHoverBorder"] = QStringLiteral("#a0a0a0");
         f["buttonText"] = QStringLiteral("#191919");
-        // Tabs: a light band, whiter when selected or under the mouse
-        f["tabFill"] = QStringLiteral(
-            "qlineargradient(x1:0, y1:1, x2:0, y2:0, stop:0 rgba(150, 150, 150, 110), stop:1 rgba(226, 226, 226, 90))");
+        // Tabs: the light band (set below); selected or under the mouse the
+        // light style's replacement of the dark gradient
         f["tabHoverFill"] = QStringLiteral(
-            "qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 rgba(255, 255, 255, 255), stop:1 rgba(226, 226, 226, 128))");
+            "qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 rgba(210, 210, 210, 127), stop:1 rgba(220, 220, 220, 50%))");
         f["tabSelectedFill"] = f["tabHoverFill"];
         f["toolHoverFill"] = f["buttonFill"];
         // Checked: btn-shadow() of the same blue as the dark theme (#428bca),
         // darker when hovered (btn-shadow(shade-color(#428bca, 8%)))
-        f["checkedFill"] = verticalGradient("#6fa7d7", "#428bca", 0.5, "#3d80ba");
-        f["checkedHoverFill"] = verticalGradient("#6c9eca", "#3d80ba", 0.5, "#3876ab");
-        f["checkedBorder"] = QStringLiteral("#356fa2");       // shade-color(#428bca, 20%)
+        // Checked: the same blue as dark; under the mouse lighter blues
+        // (the light style's replacements for the dark hover blues)
+        f["checkedFill"] = verticalGradient("#5a9ad1", "#428bca", 0.6, "#3681c1");
+        f["checkedHoverFill"] = verticalGradient("#88b7dd", "#73a8d2", 0.4, "#5c9dd1");
+        f["checkedBorder"] = QStringLiteral("#356fa2");
         // Toolbars: a light band, see-through like the dark one
-        f["toolbarDarkEnd"] = QStringLiteral("rgba(200, 200, 200, 150)");
-        f["toolbarLightEnd"] = QStringLiteral("rgba(255, 255, 255, 120)");
-        f["barEdge"] = QStringLiteral("rgba(150, 150, 150, 110)");
-        f["boxFill"] = QStringLiteral("rgba(226, 226, 226, 50%)");    // AlternateBase at 50 %, as dark
+        // The light style's colour replacements for the dark sheet:
+        // stop:0 rgba(25,25,25) -> 239, stop:1 rgba(53,53,53) -> 203,
+        // other rgba(25,25,25) -> 180, rgba(53,53,53) -> 210, rgba(66,66,66) -> 220
+        f["toolbarDarkEnd"] = QStringLiteral("rgba(239, 239, 239, 127)");
+        f["toolbarLightEnd"] = QStringLiteral("rgba(203, 203, 203, 75)");
+        f["barEdge"] = QStringLiteral("rgba(180, 180, 180, 75)");
+        f["boxFill"] = QStringLiteral("rgba(220, 220, 220, 50%)");
         f["menuBarItemHoverFill"] = QStringLiteral(
-            "qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 rgba(150, 150, 150, 200), stop:1 rgba(150, 150, 150, 60))");
-        f["menuBarItemEdge"] = QStringLiteral("rgba(150, 150, 150, 160)");
+            "qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 rgba(106, 106, 106, 255), stop:1 rgba(106, 106, 106, 75))");
+        f["menuBarItemEdge"] = QStringLiteral("rgba(106, 106, 106, 127)");
     }
     f["checkedText"] = QStringLiteral("#ffffff");
     // More values from the application's dark style sheet, with light
     // counterparts
-    f["menuBorder"] = dark ? QStringLiteral("rgb(20, 20, 20)") : QStringLiteral("rgb(200, 200, 200)");   // palette(shadow) / Mid
+    f["menuBorder"] = dark ? QStringLiteral("rgb(20, 20, 20)") : QStringLiteral("rgb(25, 25, 25)");     // palette(shadow)
     f["menuSelectedEdge"] = QStringLiteral("rgba(147, 191, 236, 127)");
-    f["menuDisabledFill"] = dark ? QStringLiteral("rgba(35, 35, 35, 127)") : QStringLiteral("rgba(226, 226, 226, 127)");
-    f["pressedEdge"] = dark ? QStringLiteral("rgba(25, 25, 25, 127)") : QStringLiteral("rgba(25, 25, 25, 60)");
-    f["softLine"] = dark ? QStringLiteral("rgba(25, 25, 25, 50%)") : QStringLiteral("rgba(25, 25, 25, 25%)");      // tab bar / pane edge
-    f["tabSelectedEdge"] = dark ? QStringLiteral("rgba(66, 66, 66, 75%)") : QStringLiteral("rgba(226, 226, 226, 75%)");
+    f["menuDisabledFill"] = QStringLiteral("rgba(35, 35, 35, 127)");      // the light style keeps it too
+    f["pressedEdge"] = dark ? QStringLiteral("rgba(25, 25, 25, 127)") : QStringLiteral("rgba(180, 180, 180, 127)");
+    f["softLine"] = dark ? QStringLiteral("rgba(25, 25, 25, 50%)") : QStringLiteral("rgba(180, 180, 180, 50%)");   // tab bar / pane edge
+    f["tabSelectedEdge"] = dark ? QStringLiteral("rgba(66, 66, 66, 75%)") : QStringLiteral("rgba(220, 220, 220, 75%)");
     f["disabledSelection"] = QStringLiteral("rgb(80, 80, 80)");      // palette Disabled Highlight
-    f["sliderHandleBorder"] = dark ? QStringLiteral("rgba(25, 25, 25, 255)") : QStringLiteral("rgb(150, 150, 150)");
+    f["sliderHandleBorder"] = dark ? QStringLiteral("rgba(25, 25, 25, 255)") : QStringLiteral("rgba(180, 180, 180, 255)");
+    // Toolbar buttons and legend entries (the application's foo.qss): a
+    // grey gradient with a groove border; light: the light style's values
+    f["barButtonFill"] = dark
+        ? QStringLiteral("qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 rgba(75, 75, 75, 255), stop:1 rgba(63, 63, 63, 255))")
+        : QStringLiteral("qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 rgba(230, 230, 230, 255), stop:1 rgba(195, 195, 195, 255))");
+    f["barButtonBorder"] = dark ? QStringLiteral("rgba(38, 38, 38, 255)") : QStringLiteral("rgba(182, 182, 182, 255)");
     // Group boxes: border, and the line under the title tab (as the
     // application's style sheet)
-    f["groupBorder"] = dark ? QStringLiteral("rgba(25, 25, 25, 127)") : QStringLiteral("rgba(25, 25, 25, 70)");
+    f["groupBorder"] = dark ? QStringLiteral("rgba(25, 25, 25, 127)") : QStringLiteral("rgba(180, 180, 180, 127)");
     f["groupTitleLine"] = QStringLiteral("rgb(127, 127, 127)");
     // The toolbar gradients, one per side, from the two ends above: the
     // darker end is towards the window's edge
@@ -249,10 +261,11 @@ QHash<QString, QString> themeFills(bool dark, const QHash<QString, QColor> &c)
     f["toolbarBottomFill"] = band("x1:0, y1:1, x2:0, y2:0");
     f["toolbarLeftFill"] = band("x1:0, y1:0, x2:1, y2:0");
     f["toolbarRightFill"] = band("x1:1, y1:0, x2:0, y2:0");
-    // Toolbar buttons and legend entries under the mouse: dark, the darker
-    // toolbar band (as the application's style sheet); light, whose band is
-    // too faint to see on a button, the darker button gradient
-    f["barButtonHoverFill"] = dark ? f["toolbarBottomFill"] : f["buttonHoverFill"];
+    // Toolbar buttons and legend entries under the mouse: the band, as the
+    // application's style sheets have it
+    f["barButtonHoverFill"] = f["toolbarBottomFill"];      // both themes, as the application's sheets
+    if (!dark)
+        f["tabFill"] = f["toolbarBottomFill"];             // light: the light band
     return f;
 }
 
@@ -329,6 +342,27 @@ Painter chevronRight(const QColor &color)
         p.setPen(pen);
         const QPointF points[] = { { 3.5, 2.0 }, { 6.5, 5.0 }, { 3.5, 8.0 } };
         p.drawPolyline(points, 3);
+    };
+}
+
+// A double chevron, 12 x 12: ">>" (pointing right) or pointing down - the
+// toolbar extension button
+Painter doubleChevron(const QColor &color, bool down)
+{
+    return [=](QPainter &p) {
+        QPen pen(color, 1.4);
+        pen.setCapStyle(Qt::RoundCap);
+        pen.setJoinStyle(Qt::RoundJoin);
+        p.setPen(pen);
+        for (double offset : { 2.0, 6.0 }) {
+            if (down) {
+                const QPointF points[] = { { 2.5, offset + 0.5 }, { 6.0, offset + 3.5 }, { 9.5, offset + 0.5 } };
+                p.drawPolyline(points, 3);
+            } else {
+                const QPointF points[] = { { offset + 0.5, 2.5 }, { offset + 3.5, 6.0 }, { offset + 0.5, 9.5 } };
+                p.drawPolyline(points, 3);
+            }
+        }
     };
 }
 
@@ -474,6 +508,26 @@ QString ModernStyle::themeName(Theme theme)
     return QString::fromLatin1(QMetaEnum::fromType<Theme>().valueToKey(int(theme)));
 }
 
+int ModernStyle::pixelMetric(PixelMetric metric, const QStyleOption *option, const QWidget *widget) const
+{
+    if (metric == PM_ToolBarExtensionExtent)
+        return 29;
+    return QProxyStyle::pixelMetric(metric, option, widget);
+}
+
+QIcon ModernStyle::standardIcon(StandardPixmap icon, const QStyleOption *option, const QWidget *widget) const
+{
+    // The toolbar's ">>" button, drawn in the current theme's text colour
+    // (QToolBar asks again when the theme changes)
+    if (icon == SP_ToolBarHorizontalExtensionButton || icon == SP_ToolBarVerticalExtensionButton) {
+        const QString file = writeImages()
+            + (icon == SP_ToolBarHorizontalExtensionButton ? QStringLiteral("toolbar-extension-h.png")
+                                                           : QStringLiteral("toolbar-extension-v.png"));
+        return QIcon(file);           // the @2x file next to it is used on high-DPI screens
+    }
+    return QProxyStyle::standardIcon(icon, option, widget);
+}
+
 void ModernStyle::setExtraStyleSheet(const QString &rules)
 {
     m_extraSheet = rules;
@@ -598,6 +652,17 @@ void ModernStyle::polish(QWidget *widget)
     // runs before a widget is first shown.
     if (qobject_cast<QMenu *>(widget) && !widget->testAttribute(Qt::WA_WState_Created))
         widget->setAttribute(Qt::WA_TranslucentBackground);
+
+    // The toolbar's ">>" button sets its icon once; give it the current
+    // theme's (polish() runs again after every theme change)
+    if (widget->objectName() == QLatin1String("qt_toolbar_ext_button")) {
+        if (auto *button = qobject_cast<QToolButton *>(widget)) {
+            auto *toolBar = qobject_cast<QToolBar *>(button->parentWidget());
+            const bool vertical = toolBar && toolBar->orientation() == Qt::Vertical;
+            button->setIcon(standardIcon(vertical ? SP_ToolBarVerticalExtensionButton
+                                                  : SP_ToolBarHorizontalExtensionButton));
+        }
+    }
 
     // Combo boxes: watch their drop-down list, to keep it within the
     // maximum height (eventFilter())
@@ -767,6 +832,8 @@ QString ModernStyle::writeImages() const
     save("branch-closed", arrow, chevronRight(c["textSecondary"]));
     save("branch-open", arrow, chevron(c["textSecondary"], false));
 
+    save("toolbar-extension-h", QSize(12, 12), doubleChevron(c["text"], false));   // standardIcon()
+    save("toolbar-extension-v", QSize(12, 12), doubleChevron(c["text"], true));
     save("grip-vertical", QSize(3, 14), gripDots(c["grip"], true));     // QSplitter::handle:horizontal
     save("grip-horizontal", QSize(14, 3), gripDots(c["grip"], false));  // QSplitter::handle:vertical
     save("dock-close", dockButton, dockClose(c["text"]));

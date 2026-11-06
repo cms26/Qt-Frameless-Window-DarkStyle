@@ -172,6 +172,9 @@ QTreeView::branch { background-color: @surface; }
 QAbstractItemView::item:selected:disabled { background: @disabledSelection; color: @textDisabled; }
 
 /* Headers: the same see-through band as toolbars, darker at the bottom */
+/* Headers are item views too: not the field look above, but palette(button)
+   under the band, as Qt draws them by default */
+QHeaderView { background-color: palette(button); border: none; border-radius: 0; }
 QTableView QTableCornerButton::section {
     background: @toolbarBottomFill;
     border: none;
@@ -399,8 +402,8 @@ QToolBar { border: none; spacing: 4px; padding: 2px; }
 QToolBar QToolButton {
     spacing: 2px;
     padding: 5px 7px;
-    background: @buttonFill;
-    border: 2px groove @buttonBorder;
+    background: @barButtonFill;
+    border: 2px groove @barButtonBorder;
     border-radius: 4px;
 }
 QToolBar QToolButton:hover         { background: @barButtonHoverFill; }
@@ -526,15 +529,15 @@ QwtLegendLabel { color: @text; }
    these win over the transparent "QwtLegend QWidget" above. */
 QwtLegend QwtLegendLabel {
     padding: 1px;
-    background: @buttonFill;
-    border: 2px groove @buttonBorder;
+    background: @barButtonFill;
+    border: 2px groove @barButtonBorder;
     border-radius: 4px;
 }
 QwtLegend QwtLegendLabel:hover { background: @barButtonHoverFill; }
 QwtLegend QwtLegendLabel[checked="false"] {
     font-style: italic;
     font-weight: 200;
-    border: 3px groove @buttonBorder;
+    border: 3px groove @barButtonBorder;
 }
 QwtLegend QwtLegendLabel[checked="true"] {
     font-weight: 800;
