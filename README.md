@@ -116,7 +116,19 @@ You can also use only one of the two parts: `ModernStyle` works with ordinary wi
 
 The style sheet is [`modernstyle/modernstyle.qss`](modernstyle/modernstyle.qss). Colours are written as `@name` and filled in from the current theme. The names and their light/dark values are in `themeColors()` at the top of [`modernstyle/modernstyle.cpp`](modernstyle/modernstyle.cpp), made from the palettes in `themePalette()` (the palette role each comes from is noted). Buttons, tabs, bars and boxes use `@buttonFill`, `@tabFill`, `@boxFill` and friends (`themeFills()`), which can be gradients or see-through colours. Change values there, or add your own rules to the sheet; it is compiled in as a resource.
 
-If your application sets its own style sheet with `qApp->setStyleSheet()`, it replaces ModernStyle's. Set style sheets on your own widgets instead (`myWidget->setStyleSheet(...)`), or append your rules to `modernstyle.qss`.
+If your application sets its own style sheet with `qApp->setStyleSheet()`, it replaces ModernStyle's, and only the palette is left (ModernStyle then prints a warning). Set style sheets on your own widgets instead (`myWidget->setStyleSheet(...)`), or append your rules to ModernStyle's:
+
+```cpp
+auto applyMyRules = [style] { qApp->setStyleSheet(style->currentStyleSheet() + myRules); };
+applyMyRules();
+connect(style, &ModernStyle::themeChanged, applyMyRules);   // the sheet is rebuilt for each theme
+```
+
+### If it doesn't look like the screenshots
+
+- Check the program's output for `ModernStyle:` warnings: one says the style sheet resource is missing (link the `FramelessWindow::FramelessWindow` target instead of compiling the library's `.cpp` files into your own target), the other that `qApp->setStyleSheet()` replaced the sheet.
+- Make sure no old `DarkStyle.cpp` / `darkstyle.qss` / `darkstyle.qrc` from the Qt 5 version is still in your project: its `DarkStyle` loads the old sheet over ModernStyle's. The library's `DarkStyle.h` is header-only.
+- Don't set your own palette after `QApplication::setStyle()`; ModernStyle's palette is part of the look.
 
 ## Qwt plots
 
