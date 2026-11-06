@@ -239,6 +239,10 @@ QHash<QString, QString> themeFills(bool dark, const QHash<QString, QColor> &c)
     f["toolbarBottomFill"] = band("x1:0, y1:1, x2:0, y2:0");
     f["toolbarLeftFill"] = band("x1:0, y1:0, x2:1, y2:0");
     f["toolbarRightFill"] = band("x1:1, y1:0, x2:0, y2:0");
+    // Toolbar buttons and legend entries under the mouse: dark, the darker
+    // toolbar band (as the application's style sheet); light, whose band is
+    // too faint to see on a button, the darker button gradient
+    f["barButtonHoverFill"] = dark ? f["toolbarBottomFill"] : f["buttonHoverFill"];
     return f;
 }
 

@@ -15,7 +15,7 @@ QPushButton {
     color: @buttonText;
     border: 1px solid @buttonBorder;
     border-radius: 6px;
-    padding: 5px 16px;
+    padding: 5px 20px;
     min-height: 18px;
 }
 QPushButton:hover    { background: @buttonHoverFill; border-color: @buttonHoverBorder; }
@@ -182,6 +182,14 @@ QHeaderView::section {
     border-bottom: 1px solid @border;
     padding: 4px 8px;
 }
+
+/* Lists: a little space between items; the check box's pressed look */
+QListWidget::item { margin-top: 3px; }
+QListView::indicator:pressed { image: url(@icons/checkbox-checked-pressed.png); }
+
+/* The colour dialog: wide enough spin boxes and a bigger colour field */
+QColorDialog QSpinBox { min-width: 3.5em; }
+QColorDialog QColorPicker { min-width: 20em; min-height: 20em; }
 
 /* Tree views: lines from parent to child, arrows on items with children */
 QTreeView::branch:has-siblings:!adjoins-item  { border-image: url(@icons/branch-line.png) 0; }
@@ -383,6 +391,21 @@ QMenu::separator { height: 1px; background-color: palette(alternate-base); margi
 /* Toolbars: a see-through band, darker towards the window's edge, with a
    3 px edge on the side facing the window's contents */
 QToolBar { border: none; spacing: 4px; padding: 2px; }
+
+/* Buttons in toolbars: raised grey buttons with a groove edge; under the
+   mouse the darker toolbar band; checked blue, darker under the mouse.
+   (These win over the QToolButton rules above.) */
+QToolBar QToolButton {
+    spacing: 2px;
+    padding: 5px 7px;
+    background: @buttonFill;
+    border: 2px groove @buttonBorder;
+    border-radius: 4px;
+}
+QToolBar QToolButton:hover         { background: @barButtonHoverFill; }
+QToolBar QToolButton:pressed       { background: @buttonPressedFill; }
+QToolBar QToolButton:checked       { background: @checkedFill; color: @checkedText; }
+QToolBar QToolButton:checked:hover { background: @checkedHoverFill; }
 QToolBar:top    { background: @toolbarTopFill;    border-bottom: 3px solid @toolbarTopFill; }
 QToolBar:bottom { background: @toolbarBottomFill; border-top: 3px solid @toolbarBottomFill; }
 QToolBar:left   { background: @toolbarLeftFill;   border-right: 3px solid @toolbarLeftFill; }
@@ -467,6 +490,7 @@ QMainWindow::separator:horizontal { height: 6px; image: url(@icons/grip-horizont
 
 QStatusBar { background: @toolbarBottomFill; color: @textSecondary; }
 QStatusBar::item { border: none; }
+QStatusBar QWidget { padding: 3px; }
 
 QToolTip {
     background-color: @tooltip;
@@ -488,6 +512,28 @@ QwtPlotCanvas {
 QwtScaleWidget { color: @textSecondary; }       /* axis numbers, ticks and titles */
 QwtLegend, QwtLegend QWidget { background: transparent; }
 QwtLegendLabel { color: @text; }
+/* Legend entries are buttons: raised grey, the toolbar band under the mouse;
+   with a checkable legend (QwtLegendData::Checkable) hidden curves are
+   italic and thin, shown ones bold and blue. "QwtLegend QwtLegendLabel" so
+   these win over the transparent "QwtLegend QWidget" above. */
+QwtLegend QwtLegendLabel {
+    padding: 1px;
+    background: @buttonFill;
+    border: 2px groove @buttonBorder;
+    border-radius: 4px;
+}
+QwtLegend QwtLegendLabel:hover { background: @barButtonHoverFill; }
+QwtLegend QwtLegendLabel[checked="false"] {
+    font-style: italic;
+    font-weight: 200;
+    border: 3px groove @buttonBorder;
+}
+QwtLegend QwtLegendLabel[checked="true"] {
+    font-weight: 800;
+    background: @checkedFill;
+    color: @checkedText;
+}
+QwtLegend QwtLegendLabel[checked="true"]:hover { background: @checkedHoverFill; }
 QwtTextLabel { color: @text; }                  /* the plot's title and footer */
 
 /* --- Frameless window (framelesswindow/): title bar text ------------------------------ */
