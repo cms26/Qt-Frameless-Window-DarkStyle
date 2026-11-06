@@ -24,6 +24,8 @@
 #include <QListWidget>
 #include <QPlainTextEdit>
 #include <QSpinBox>
+#include <QSplitter>
+#include <QTreeWidget>
 #include <QToolBar>
 
 MainWindow::MainWindow(ModernStyle *style, QWidget *parent)
@@ -38,15 +40,29 @@ MainWindow::MainWindow(ModernStyle *style, QWidget *parent)
     for (int i = 1; i <= 40; ++i)
         ui->comboBox->addItem(tr("Item %1").arg(i));
 
-    // Theme switcher in the toolbar
+    // The first tab: a tree and the text box side by side, with a splitter
+    // between them
+    auto *outline = new QTreeWidget;
+    outline->setHeaderHidden(true);
+    for (const QString &chapter : { tr("Introduction"), tr("Setup"), tr("Usage") }) {
+        auto *item = new QTreeWidgetItem(outline, { chapter });
+        for (int i = 1; i <= 3; ++i)
+            new QTreeWidgetItem(item, { tr("Section %1").arg(i) });
+    }
+    outline->expandToDepth(0);
+    auto *splitter = new QSplitter(Qt::Horizontal);
+    splitter->addWidget(outline);
+    ui->tab->layout()->replaceWidget(ui->textEdit, splitter);
+    splitter->addWidget(ui->textEdit);
+    splitter->setSizes({ 160, 400 });
+
+    // Theme switcher in the toolbar, filled from the style's theme names
     if (style) {
         auto *themes = new QComboBox(this);
-        themes->addItem(tr("System"), QVariant::fromValue(ModernStyle::Theme::System));
-        themes->addItem(tr("Light"), QVariant::fromValue(ModernStyle::Theme::Light));
-        themes->addItem(tr("Dark"), QVariant::fromValue(ModernStyle::Theme::Dark));
-        themes->setCurrentIndex(themes->findData(QVariant::fromValue(style->theme())));
-        connect(themes, &QComboBox::currentIndexChanged, this, [style, themes] {
-            style->setTheme(themes->currentData().value<ModernStyle::Theme>());
+        themes->addItems(style->getThemeNames());
+        themes->setCurrentText(ModernStyle::themeName(style->theme()));
+        connect(themes, &QComboBox::currentTextChanged, this, [style](const QString &name) {
+            style->setTheme(ModernStyle::themeFromName(name));
         });
 
         ui->mainToolBar->addSeparator();

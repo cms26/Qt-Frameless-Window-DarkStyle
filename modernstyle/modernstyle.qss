@@ -247,21 +247,21 @@ QAbstractScrollArea QScrollBar {
 }
 
 QScrollBar::handle {
-    background-color: @borderStrong;
+    background-color: @groove;
     border-radius: 4px;
     min-width: 24px;
     min-height: 24px;
     margin: 1px;
 }
-QScrollBar::handle:hover   { background-color: @textSecondary; }
+QScrollBar::handle:hover   { background-color: @grooveHover; }
 QScrollBar::handle:pressed { background-color: @accent; }
 QScrollBar::add-line, QScrollBar::sub-line { width: 0; height: 0; border: none; background: none; }
 QScrollBar::add-page, QScrollBar::sub-page { background: none; }
 
 /* --- Sliders and progress bars ---------------------------------------------------- */
 
-QSlider::groove:horizontal { height: 4px; background-color: @borderStrong; border-radius: 2px; }
-QSlider::groove:vertical   { width: 4px; background-color: @borderStrong; border-radius: 2px; }
+QSlider::groove:horizontal { height: 4px; background-color: @groove; border-radius: 2px; }
+QSlider::groove:vertical   { width: 4px; background-color: @groove; border-radius: 2px; }
 QSlider::sub-page:horizontal { background-color: @accent; border-radius: 2px; }
 QSlider::add-page:vertical   { background-color: @accent; border-radius: 2px; }
 QSlider::handle {
@@ -345,15 +345,23 @@ QDockWidget > QWidget {
 
 /* --- Splitters and the gaps between dock widgets ------------------------------ */
 
+/* A strip in palette(alternate-base) with three grip dots in the middle,
+   so it can be found; the accent colour while the mouse is over it. */
 QSplitter::handle, QMainWindow::separator {
     background-color: palette(alternate-base);
 }
-QSplitter::handle:hover, QMainWindow::separator:hover {
-    background-color: @borderStrong;
+QSplitter::handle:hover, QMainWindow::separator:hover,
+QSplitter::handle:pressed, QMainWindow::separator:pressed {
+    background-color: @accent;
 }
-QSplitter::handle:horizontal { width: 4px; }
-QSplitter::handle:vertical   { height: 4px; }
-QMainWindow::separator       { width: 4px; height: 4px; }
+QSplitter::handle:horizontal, QMainWindow::separator:vertical {
+    width: 7px;
+    image: url(@icons/grip-vertical.png);
+}
+QSplitter::handle:vertical, QMainWindow::separator:horizontal {
+    height: 7px;
+    image: url(@icons/grip-horizontal.png);
+}
 
 QStatusBar { background: transparent; color: @textSecondary; }
 QStatusBar::item { border: none; }
