@@ -122,7 +122,17 @@ MainWindow::MainWindow(ModernStyle *style, QWidget *parent)
     layersDock->setWidget(layers);
     layersDock->setWindowIcon(QWidget::style()->standardIcon(QStyle::SP_DirIcon));
     addDockWidget(Qt::RightDockWidgetArea, layersDock);
+    // A third one in the same place: three tabs, each with its dock's icon
+    auto *markers = new QListWidget;
+    markers->addItems({ tr("Start"), tr("Peak"), tr("End") });
+    auto *markersDock = new QDockWidget(tr("Markers"), this);
+    markersDock->setObjectName(QStringLiteral("markersDock"));
+    markersDock->setWidget(markers);
+    markersDock->setWindowIcon(QWidget::style()->standardIcon(QStyle::SP_DialogApplyButton));
+    addDockWidget(Qt::RightDockWidgetArea, markersDock);
+
     tabifyDockWidget(propertiesDock, layersDock);
+    tabifyDockWidget(layersDock, markersDock);
     propertiesDock->raise();
 
     auto *log = new QPlainTextEdit;
