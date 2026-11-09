@@ -34,6 +34,13 @@ FramelessWindow::FramelessWindow(QWidget *parent)
     setMouseTracking(true);   // for the resize cursors at the edges
 
     m_contentArea->setObjectName(QStringLiteral("windowContent"));
+    // The resize cursors are set on this window, at its edges, and child
+    // widgets show their parent's cursor unless they have their own. The
+    // mouse can go straight from an edge into the content, where this window
+    // gets no more mouse moves to reset it, so the resize arrow would stay.
+    // The content area (like the title bar) has its own normal arrow; widgets
+    // inside it still set theirs (text cursor in text boxes, ...).
+    m_contentArea->setCursor(Qt::ArrowCursor);
     auto *contentLayout = new QVBoxLayout(m_contentArea);
     contentLayout->setContentsMargins(0, 0, 0, 0);
 
