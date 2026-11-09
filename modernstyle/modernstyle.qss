@@ -24,7 +24,7 @@ QPushButton:pressed  { background: @buttonPressedFill; }
 QPushButton:checked         { background: @checkedFill; color: @checkedText; border-color: @checkedBorder; }
 QPushButton:checked:hover   { background: @checkedHoverFill; }
 QPushButton:checked:pressed { background: @checkedHoverFill; }
-QPushButton:disabled { color: @textDisabled; background-color: @window; border-color: @border; }
+QPushButton:disabled { color: @textDisabled; background-color: @buttonDisabledFill; border-color: @border; }
 QPushButton:focus    { border-color: @accent; }
 
 /* The default button (Enter) uses the accent colour */
@@ -32,7 +32,7 @@ QPushButton:default         { background-color: @accent; color: @accentText; bor
 QPushButton:default:hover   { background-color: @accentHover; border-color: @accentHover; }
 QPushButton:default:pressed { background-color: @accentPressed; }
 QPushButton:default:disabled,
-QPushButton:checked:disabled { background-color: @border; color: @textDisabled; border-color: @border; }
+QPushButton:checked:disabled { background-color: @buttonDisabledFill; color: @textDisabled; border-color: @border; }
 
 QToolButton {
     background: transparent;
@@ -94,7 +94,9 @@ QComboBox QAbstractItemView {
     selection-color: @text;
 }
 
-QAbstractSpinBox { padding-right: 20px; }
+/* Room for the buttons on the right; a little room on the left, also when
+   the spin box has no frame (an editor in a table or tree cell) */
+QAbstractSpinBox { padding-left: 8px; padding-right: 20px; }
 QAbstractSpinBox::up-button, QAbstractSpinBox::down-button {
     subcontrol-origin: border;
     border: none;
@@ -507,7 +509,7 @@ QToolTip {
     background-color: @tooltip;
     color: @text;
     border: 1px solid @accent;
-    padding: 4px 8px;
+    padding: 1px 2px;   /* Qt adds the border and padding again as the label's margin */
 }
 
 /* --- Qwt plots (https://qwt.sourceforge.io) ------------------------------------------

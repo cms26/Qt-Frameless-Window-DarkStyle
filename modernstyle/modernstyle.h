@@ -82,6 +82,13 @@ public:
     bool comboWheelScrolling() const { return m_comboWheelScrolling; }
     void setComboWheelScrolling(bool enabled) { m_comboWheelScrolling = enabled; }
 
+    // The "not allowed" mouse cursor (Qt::ForbiddenCursor) over disabled
+    // buttons (push, tool, check and radio buttons). Off by default. Qt
+    // itself never shows a disabled widget's own cursor, so this watches the
+    // mouse over the application's windows.
+    bool disabledButtonCursor() const { return m_disabledCursorFilter != nullptr; }
+    void setDisabledButtonCursor(bool on);
+
     // Dock widgets: give each one ModernStyle's title bar (DockTitleBar), which
     // shows the dock's icon (QDockWidget::setWindowIcon()) docked and
     // floating. On by default; dock widgets with a title bar widget of their
@@ -155,6 +162,7 @@ private:
     bool m_applying = false;
     int m_comboPopupMaxHeight = 0;
     bool m_comboWheelScrolling = true;
+    QObject *m_disabledCursorFilter = nullptr;   // setDisabledButtonCursor(); a child of this style
     QString m_extraSheet;            // setExtraStyleSheet()
     QHash<QString, qreal> m_objectFontSizes;   // setObjectFontPointSize()
     void applyFontSize(QWidget *widget) const;

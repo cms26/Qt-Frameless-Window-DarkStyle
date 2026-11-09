@@ -6,6 +6,8 @@
 #include "docktitlebar.h"
 
 #include <QApplication>
+#include <QAbstractButton>
+#include <QMouseEvent>
 #include <QDir>
 #include <QFile>
 #include <QPainter>
@@ -29,6 +31,71 @@
 #include <functional>
 
 namespace {
+
+// setDisabledButtonCursor(): shows Qt::ForbiddenCursor while the mouse is
+// over a disabled button. Qt clears the cursor of disabled widgets and sends
+// them no mouse events, so this watches the mouse moving over the
+// application's windows (an application-wide event filter) and sets an
+// override cursor while a disabled button is under it.
+class DisabledButtonCursor : public QObject
+{
+public:
+    explicit DisabledButtonCursor(QObject *parent)
+        : QObject(parent)
+    {
+        qApp->installEventFilter(this);
+    }
+
+    ~DisabledButtonCursor() override
+    {
+        show(false);
+    }
+
+protected:
+    bool eventFilter(QObject *watched, QEvent *event) override
+    {
+        if (watched->isWindowType()) {
+            switch (event->type()) {
+            case QEvent::MouseMove:
+                show(disabledButtonAt(static_cast<QMouseEvent *>(event)->globalPosition().toPoint()));
+                break;
+            case QEvent::Leave:              // the mouse left the window
+            case QEvent::Hide:
+                show(false);
+                break;
+            default:
+                break;
+            }
+        }
+        return QObject::eventFilter(watched, event);
+    }
+
+private:
+    static bool disabledButtonAt(const QPoint &globalPos)
+    {
+        for (QWidget *w = QApplication::widgetAt(globalPos); w; w = w->parentWidget()) {
+            if (qobject_cast<QAbstractButton *>(w))
+                return !w->isEnabled();
+            if (w->isWindow())
+                break;
+        }
+        return false;
+    }
+
+    void show(bool forbidden)
+    {
+        if (forbidden == m_shown)
+            return;
+        m_shown = forbidden;
+        if (forbidden)
+            QGuiApplication::setOverrideCursor(Qt::ForbiddenCursor);
+        else
+            QGuiApplication::restoreOverrideCursor();
+    }
+
+    bool m_shown = false;
+};
+
 
 // The two palettes, exactly as the application's own dark and white
 // palettes set them (all roles, with the disabled ones). standardPalette()
@@ -239,6 +306,10 @@ QHash<QString, QString> themeFills(bool dark, const QHash<QString, QColor> &c)
     f["softLine"] = dark ? QStringLiteral("rgba(25, 25, 25, 50%)") : QStringLiteral("rgba(180, 180, 180, 50%)");   // tab bar / pane edge
     f["tabSelectedEdge"] = dark ? QStringLiteral("rgba(66, 66, 66, 75%)") : QStringLiteral("rgba(220, 220, 220, 75%)");
     f["disabledSelection"] = QStringLiteral("rgb(80, 80, 80)");      // palette Disabled Highlight
+    // Disabled push buttons. Dark: a little lighter than the window
+    // (rgb(53, 53, 53)), darker than an enabled button. Light: the window's
+    // white, already the lightest.
+    f["buttonDisabledFill"] = dark ? QStringLiteral("rgb(61, 61, 61)") : QStringLiteral("rgb(255, 255, 255)");
     f["sliderHandleBorder"] = dark ? QStringLiteral("rgba(25, 25, 25, 255)") : QStringLiteral("rgba(180, 180, 180, 255)");
     // Toolbar buttons and legend entries (the application's foo.qss): a
     // grey gradient with a groove border; light: the light style's values
@@ -513,6 +584,18 @@ int ModernStyle::pixelMetric(PixelMetric metric, const QStyleOption *option, con
     if (metric == PM_ToolBarExtensionExtent)
         return 29;
     return QProxyStyle::pixelMetric(metric, option, widget);
+}
+
+void ModernStyle::setDisabledButtonCursor(bool on)
+{
+    if (on == disabledButtonCursor())
+        return;
+    if (on) {
+        m_disabledCursorFilter = new DisabledButtonCursor(this);
+    } else {
+        delete m_disabledCursorFilter;
+        m_disabledCursorFilter = nullptr;
+    }
 }
 
 int ModernStyle::styleHint(StyleHint hint, const QStyleOption *option, const QWidget *widget,
