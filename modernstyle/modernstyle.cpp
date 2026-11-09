@@ -515,6 +515,21 @@ int ModernStyle::pixelMetric(PixelMetric metric, const QStyleOption *option, con
     return QProxyStyle::pixelMetric(metric, option, widget);
 }
 
+int ModernStyle::styleHint(StyleHint hint, const QStyleOption *option, const QWidget *widget,
+                           QStyleHintReturn *returnData) const
+{
+    if (hint == SH_ComboBox_AllowWheelScrolling) {
+        // The combo box's own "wheelScrolling" property, else comboWheelScrolling().
+        // Off: QComboBox ignores the wheel, so it goes on to the panel or page
+        // under it, which scrolls.
+        const QVariant own = widget ? widget->property("wheelScrolling") : QVariant();
+        const bool allowed = own.isValid() ? own.toBool() : m_comboWheelScrolling;
+        if (!allowed)
+            return 0;
+    }
+    return QProxyStyle::styleHint(hint, option, widget, returnData);
+}
+
 QIcon ModernStyle::standardIcon(StandardPixmap icon, const QStyleOption *option, const QWidget *widget) const
 {
     // The toolbar's ">>" button, drawn in the current theme's text colour
