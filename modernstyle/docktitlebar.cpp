@@ -42,7 +42,9 @@ DockTitleBar::DockTitleBar(QDockWidget *dock)
     m_close->setIcon(style()->standardIcon(QStyle::SP_TitleBarCloseButton, nullptr, this));
 
     auto *layout = new QHBoxLayout(this);
-    layout->setContentsMargins(8, 4, 4, 4);
+    // 3 px above and below the buttons: 25 px in all, as tall as the
+    // application's old dock title bars (QDockWidget::title { padding: 4px })
+    layout->setContentsMargins(8, 3, 4, 3);
     layout->setSpacing(6);
     layout->addWidget(m_icon);
     layout->addWidget(m_title, 1);
