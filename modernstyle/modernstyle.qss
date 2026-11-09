@@ -25,7 +25,6 @@ QPushButton:checked         { background: @checkedFill; color: @checkedText; bor
 QPushButton:checked:hover   { background: @checkedHoverFill; }
 QPushButton:checked:pressed { background: @checkedHoverFill; }
 QPushButton:disabled { color: @textDisabled; background-color: @buttonDisabledFill; border-color: @border; }
-QPushButton:focus    { border-color: @accent; }
 
 /* The default button (Enter) uses the accent colour */
 QPushButton:default         { background-color: @accent; color: @accentText; border-color: @accent; }
@@ -71,6 +70,15 @@ QLineEdit:hover, QTextEdit:hover, QPlainTextEdit:hover, QAbstractSpinBox:hover, 
 }
 QLineEdit:focus, QTextEdit:focus, QPlainTextEdit:focus, QAbstractSpinBox:focus, QComboBox:focus {
     border: 1px solid @accent;
+}
+/* Read-only text (QTextBrowser, read-only line and text edits): no blue
+   focus border, as they aren't typed into; the stronger border under the mouse */
+QLineEdit[readOnly="true"]:focus, QTextEdit[readOnly="true"]:focus, QPlainTextEdit[readOnly="true"]:focus {
+    border-color: @border;
+}
+QLineEdit[readOnly="true"]:focus:hover, QTextEdit[readOnly="true"]:focus:hover,
+QPlainTextEdit[readOnly="true"]:focus:hover {
+    border-color: @borderStrong;
 }
 QLineEdit:disabled, QTextEdit:disabled, QPlainTextEdit:disabled, QAbstractSpinBox:disabled,
 QComboBox:disabled {
