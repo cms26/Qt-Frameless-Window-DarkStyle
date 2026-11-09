@@ -39,6 +39,7 @@ int main(int argc, char *argv[])
     auto *style = new ModernStyle(theme);
     style->setComboPopupMaxHeight(240);       // longer drop-down lists scroll
     style->setComboWheelScrolling(false);     // the wheel scrolls the page, not combo box values
+    style->setDisabledButtonCursor(true);     // "not allowed" cursor over disabled buttons
     QApplication::setStyle(style);
 
     // The frameless window with our main window inside

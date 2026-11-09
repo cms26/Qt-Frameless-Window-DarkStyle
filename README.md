@@ -40,6 +40,7 @@ Version 2 of this fork brings the original [Qt-Frameless-Window-DarkStyle](https
 - Toolbar buttons light up on hover like push buttons, checked ones included (a checked button gets brighter under the mouse).
 - Long combo box lists scroll: `style->setComboPopupMaxHeight(240)` caps every drop-down at 240 px, and `combo->setProperty("popupMaxHeight", 120)` sets a limit for a single combo box. Without either, `QComboBox::maxVisibleItems()` (10) applies.
 - The mouse wheel can leave combo boxes alone: `style->setComboWheelScrolling(false)` stops the wheel changing any combo box's value (it scrolls the panel or page under it instead), and `combo->setProperty("wheelScrolling", true / false)` decides for a single combo box. Clicking and the keyboard still change the value. On by default, as in Qt.
+- Disabled buttons can show the "not allowed" cursor: `style->setDisabledButtonCursor(true)` shows `Qt::ForbiddenCursor` while the mouse is over a disabled push, tool, check or radio button. Off by default. (Qt never shows a disabled widget's own cursor, so `setCursor()` on the button can't do this.)
 - `DarkStyle` still exists: `QApplication::setStyle(new DarkStyle)` keeps working (always dark).
 
 ## Requirements
