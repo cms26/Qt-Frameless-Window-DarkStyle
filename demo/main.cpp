@@ -38,6 +38,7 @@ int main(int argc, char *argv[])
     // The style: the application takes ownership
     auto *style = new ModernStyle(theme);
     style->setComboPopupMaxHeight(240);       // longer drop-down lists scroll
+    style->setComboWheelScrolling(false);     // the wheel scrolls the page, not combo box values
     QApplication::setStyle(style);
 
     // The frameless window with our main window inside

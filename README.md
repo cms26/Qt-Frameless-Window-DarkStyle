@@ -39,6 +39,7 @@ Version 2 of this fork brings the original [Qt-Frameless-Window-DarkStyle](https
 - **Dock widgets are panels**: a body a little lighter than the window and a lighter title bar with rounded top corners and clear close / float buttons. Splitter handles, the gaps between dock widgets and the menu and toolbar separators use `palette(alternate-base)`.
 - Toolbar buttons light up on hover like push buttons, checked ones included (a checked button gets brighter under the mouse).
 - Long combo box lists scroll: `style->setComboPopupMaxHeight(240)` caps every drop-down at 240 px, and `combo->setProperty("popupMaxHeight", 120)` sets a limit for a single combo box. Without either, `QComboBox::maxVisibleItems()` (10) applies.
+- The mouse wheel can leave combo boxes alone: `style->setComboWheelScrolling(false)` stops the wheel changing any combo box's value (it scrolls the panel or page under it instead), and `combo->setProperty("wheelScrolling", true / false)` decides for a single combo box. Clicking and the keyboard still change the value. On by default, as in Qt.
 - `DarkStyle` still exists: `QApplication::setStyle(new DarkStyle)` keeps working (always dark).
 
 ## Requirements

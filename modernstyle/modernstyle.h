@@ -75,6 +75,13 @@ public:
     int comboPopupMaxHeight() const { return m_comboPopupMaxHeight; }
     void setComboPopupMaxHeight(int pixels) { m_comboPopupMaxHeight = qMax(0, pixels); }
 
+    // Whether the mouse wheel changes a combo box's value. On by default (as
+    // Qt does). Off: the wheel scrolls the panel or page under the combo box
+    // instead; clicking and the keyboard still change it. A combo box can
+    // have its own setting: combo->setProperty("wheelScrolling", false).
+    bool comboWheelScrolling() const { return m_comboWheelScrolling; }
+    void setComboWheelScrolling(bool enabled) { m_comboWheelScrolling = enabled; }
+
     // Dock widgets: give each one ModernStyle's title bar (DockTitleBar), which
     // shows the dock's icon (QDockWidget::setWindowIcon()) docked and
     // floating. On by default; dock widgets with a title bar widget of their
@@ -124,6 +131,9 @@ public:
                     const QWidget *widget = nullptr) const override;
     QIcon standardIcon(StandardPixmap icon, const QStyleOption *option = nullptr,
                        const QWidget *widget = nullptr) const override;
+    // Combo boxes and the mouse wheel: setComboWheelScrolling()
+    int styleHint(StyleHint hint, const QStyleOption *option = nullptr, const QWidget *widget = nullptr,
+                  QStyleHintReturn *returnData = nullptr) const override;
 
 protected:
     bool eventFilter(QObject *watched, QEvent *event) override;
@@ -144,6 +154,7 @@ private:
     QPalette m_systemPalette;        // the palette before this style changed it
     bool m_applying = false;
     int m_comboPopupMaxHeight = 0;
+    bool m_comboWheelScrolling = true;
     QString m_extraSheet;            // setExtraStyleSheet()
     QHash<QString, qreal> m_objectFontSizes;   // setObjectFontPointSize()
     void applyFontSize(QWidget *widget) const;
